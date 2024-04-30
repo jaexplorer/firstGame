@@ -1,20 +1,80 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { FC, useEffect, useRef, useState } from "react";
+import {
+  DevSettings,
+  NativeModules,
+  Platform,
+  SafeAreaView,
+  StatusBar as STB,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { loadAssetsAsync } from "./assets/utils/AssetHelper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StackParamList } from "./src/navigation/NavigationConstants";
+import {
+  getActiveRouteName,
+  navigationRef,
+} from "./src/navigation/NavigationUtils";
+import store from "./src/redux/store";
+import Splash from "./src/screens/splash/Splash";
+import { Provider as ReduxProvider } from "react-redux";
+import {
+  NavigationContainer,
+  NavigationContainerRef,
+} from "@react-navigation/native";
+import RootNavigation from "./src/navigation/Navigation";
 
-export default function App() {
+interface AppProps {}
+
+const App: FC<AppProps> = ({}) => {
+  const [loading, setLoading] = useState(true);
+  const routeNameRef = useRef<string>();
+
+  useEffect(() => {
+    loadAssetsAsync()
+      .then(() => {
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
+      })
+      .catch((err) => console.log(err));
+    const state = navigationRef?.current?.getRootState();
+    routeNameRef.current = getActiveRouteName(state);
+  }, []);
+
+  if (__DEV__) {
+    const { default: tron } = require("./src/util/reactotron");
+    console.tron = tron;
+  }
+
+  if (loading) return <Splash />;
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ReduxProvider store={store}>
+      <NavigationContainer
+        ref={navigationRef}
+        onStateChange={(state): void => {
+          const currentRouteName = getActiveRouteName(state);
+          routeNameRef.current = currentRouteName;
+        }}
+      >
+        <SafeAreaProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <StatusBar />
+            <SafeAreaView
+              style={{
+                flex: 1,
+                backgroundColor: "#000",
+                paddingTop: STB.currentHeight,
+              }}
+            >
+              <RootNavigation />
+            </SafeAreaView>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </NavigationContainer>
+    </ReduxProvider>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
