@@ -1,34 +1,24 @@
-import React, { FC, useEffect, useState, useMemo } from "react";
-import { View, Text, StatusBar as STB, StyleSheet } from "react-native";
-import { useStyles } from "./LevelStyles";
-import { Dispatch } from "redux";
-import { connect } from "react-redux";
-import { ApplicationState } from "../../redux/state/ApplicationState";
-import { Level as LevelType } from "../../models/Level";
-import Background from "../../components/background/Background";
-import { ARMY, WALLS } from "../../components/background/BackgroundConstants";
-import Wall from "../../components/wall/Wall";
-import Army from "../../components/army/Army";
+import React, { FC, useMemo, useState } from "react";
+import { StatusBar as STB, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TouchableOpacity } from "react-native-gesture-handler";
-import { navigateBack } from "../../navigation/NavigationUtils";
-// import { NavMesh, buildPolysFromGridMap, PolyPoints } from "navmesh";
-import {
-  convertToCellCoordinates,
-  floorToInterval,
-  isWalkable,
-  roundToInterval,
-} from "./LevelUtils";
-import { CELL_SIZE } from "../../constants/GameConstants";
-import Svg, { Polygon, Polyline } from "react-native-svg";
+import { connect } from "react-redux";
+import { Dispatch } from "redux";
+import Background from "../../components/background/Background";
+import Wall from "../../components/wall/Wall";
+import { Level as LevelType } from "../../models/Level";
+import { ApplicationState } from "../../redux/state/ApplicationState";
+import { useStyles } from "./LevelStyles";
 import { CurveInterpolator } from "curve-interpolator";
+import PF from "pathfinding";
 import {
   runOnJS,
-  useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
-import PF from "pathfinding";
+import Svg, { Polyline } from "react-native-svg";
+import { CELL_SIZE } from "../../constants/GameConstants";
+import { convertToCellCoordinates, floorToInterval } from "./LevelUtils";
+import Base from "../../components/base/Base";
 
 interface LevelProps {
   levels: LevelType[] | undefined;
@@ -44,15 +34,11 @@ export interface Tile {
 const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
-  const armySelected = useSharedValue(false);
+  const heightDifference = insets.bottom + insets.top + 10 + STB.currentHeight!;
   const lastTap = useSharedValue<{ x: number; y: number } | undefined>(
     undefined
   );
-  const [proposedArmyPath, setProposedArmyPath] = useState<undefined | any[][]>(
-    undefined
-  );
 
-  const heightDifference = insets.bottom + insets.top + 10 + STB.currentHeight!;
   const level = useMemo<LevelType | undefined>(() => {
     if (!!levels && !!levels.length && selectedLevel !== undefined) {
       let result = levels[selectedLevel];
@@ -66,6 +52,13 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   }, [levels, selectedLevel]);
 
   if (level === undefined) return null;
+
+  const bases = level.players.map((player) => ({
+    offset: useSharedValue({ x: 0, y: 0 }),
+    position: useSharedValue({ x: player.x, y: player.y }),
+    isPlayer: player.isPlayer,
+    color: player.color,
+  }));
 
   const grid = useMemo<number[][]>(() => {
     return Array.from({ length: level.height / CELL_SIZE }, (_, y) =>
@@ -90,10 +83,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   }, [grid]);
 
   const findPathPoints = (x: number, y: number) => {
-    console.log("XY", `${x} - ${y}`);
     const { cellX, cellY } = convertToCellCoordinates(x, y);
-    // TODO - if clicking a wall, it breaks, fix it
-    console.log("cellX, cellY", `${cellX} - ${cellY}`);
 
     const finder = new PF.AStarFinder({
       allowDiagonal: true,
@@ -112,18 +102,15 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
       alpha: 0.5,
     });
 
-    setProposedArmyPath(interp.getPoints(80));
+    // setProposedArmyPath(interp.getPoints(80));
   };
 
-  useDerivedValue(() => {
-    if (armySelected.value === true && lastTap.value !== undefined) {
-      const result = runOnJS(findPathPoints)(lastTap.value.x, lastTap.value.y);
-      console.log("resuslt", result);
-      return result;
-    }
-  }, [armySelected, lastTap]);
-
-  console.log("proposedArmyPath", proposedArmyPath);
+  // useDerivedValue(() => {
+  //   if (armySelected.value === true && lastTap.value !== undefined) {
+  //     const result = runOnJS(findPathPoints)(lastTap.value.x, lastTap.value.y);
+  //     return result;
+  //   }
+  // }, [armySelected, lastTap]);
 
   return (
     <View style={styles.rootContainer}>
@@ -135,7 +122,6 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
           backgroundWidth={level.width}
           backgroundHeight={level.height}
           lastTap={lastTap}
-          armySelected={armySelected}
         >
           <>
             {!!grid &&
@@ -165,7 +151,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 height={wall.height}
               />
             ))}
-            {proposedArmyPath && (
+            {/* {proposedArmyPath && (
               <View style={styles.poly}>
                 <Svg style={StyleSheet.absoluteFill}>
                   <Polyline
@@ -183,15 +169,17 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                   />
                 </Svg>
               </View>
-            )}
-            <Army
-              primary={level.players[0].isPlayer}
-              color={level.players[0].color}
-              backgroundWidth={level.width}
-              backgroundHeight={level.height}
-              walls={level.walls}
-              armySelected={armySelected}
-            />
+            )} */}
+            {bases.map((_, idx) => (
+              <Base
+                key={idx}
+                index={idx}
+                bases={bases}
+                backgroundWidth={level.width}
+                backgroundHeight={level.height}
+                walls={level.walls}
+              />
+            ))}
           </>
         </Background>
       )}

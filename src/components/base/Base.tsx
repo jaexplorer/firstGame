@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState, useMemo } from "react";
 import { View, Text, Image } from "react-native";
-import { useStyles } from "./ArmyStyles";
+import { useStyles } from "./BaseStyles";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -18,47 +18,55 @@ import {
 } from "react-native-gesture-handler";
 import { screenHeight, screenWidth } from "../../constants/ScreenSize";
 import { WallProps } from "../wall/Wall";
-import { isCollidingWithWalls } from "./ArmyUtils";
+import { isCollidingWithWalls } from "./BaseUtils";
+import { BASE_SIZE, BaseShared } from "../../models/Base";
 
-interface ArmyProps {
-  primary?: boolean;
-  color?: string;
+interface BaseProps {
   backgroundWidth?: number;
   backgroundHeight?: number;
   walls?: WallProps[];
-  armySelected: SharedValue<Boolean>;
+  index: number;
+  bases: BaseShared[];
 }
 
-const Army: FC<ArmyProps> = ({
-  primary = false,
-  color,
+const Base: FC<BaseProps> = ({
   backgroundWidth = screenWidth,
   backgroundHeight = screenHeight,
   walls = [],
-  armySelected,
+  index,
+  bases,
 }) => {
   const styles = useStyles();
-  const offset = useSharedValue({ x: 0, y: 0 });
-  const position = useSharedValue({ x: 0, y: 0 });
+  const base = bases[index];
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
-      offset.value = { x: position.value.x, y: position.value.y };
+      base.offset.value = {
+        x: base.position.value.x,
+        y: base.position.value.y,
+      };
     })
     .onUpdate((e) => {
       const clampedX = clamp(
-        offset.value.x + e.translationX,
+        base.offset.value.x + e.translationX,
         0,
-        backgroundWidth - 50
+        backgroundWidth - BASE_SIZE
       );
       const clampedY = clamp(
-        offset.value.y + e.translationY,
+        base.offset.value.y + e.translationY,
         0,
-        backgroundHeight - 50
+        backgroundHeight - BASE_SIZE
       );
       // Check if proposed movement collides with any walls
-      if (!isCollidingWithWalls(walls, { x: clampedX, y: clampedY }, 50, 50)) {
-        position.value = {
+      if (
+        !isCollidingWithWalls(
+          walls,
+          { x: clampedX, y: clampedY },
+          BASE_SIZE,
+          BASE_SIZE
+        )
+      ) {
+        base.position.value = {
           x: clampedX,
           y: clampedY,
         };
@@ -66,28 +74,27 @@ const Army: FC<ArmyProps> = ({
     })
     .onEnd((e) => {});
 
-  const touchGesture = Gesture.Tap().onStart(() => {
-    armySelected.value = !armySelected.value;
-  });
+  // const touchGesture = Gesture.Tap().onStart(() => {
+  //   armySelected.value = !armySelected.value;
+  // });
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: withSpring(position.value.x) },
-        { translateY: withSpring(position.value.y) },
+        { translateX: withSpring(base.position.value.x) },
+        { translateY: withSpring(base.position.value.y) },
       ],
-      borderWidth: armySelected.value ? 1 : 0,
+      backgroundColor: base.color,
+      borderWidth: 0,
     };
   });
 
-  const race = Gesture.Race(touchGesture, panGesture);
+  const race = Gesture.Race(panGesture);
 
   return (
     <GestureDetector gesture={race}>
-      <Animated.View
-        style={[styles.container, { backgroundColor: color }, animatedStyles]}
-      />
+      <Animated.View style={[styles.container, animatedStyles]} />
     </GestureDetector>
   );
 };
-export default Army;
+export default Base;

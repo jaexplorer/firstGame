@@ -35,10 +35,14 @@ export const level_0: Level = {
     {
       x: 0,
       y: 0,
-      width: 50,
-      height: 50,
       isPlayer: true,
       color: "green",
+    },
+    {
+      x: 60,
+      y: 0,
+      isPlayer: false,
+      color: "red",
     },
   ],
 };

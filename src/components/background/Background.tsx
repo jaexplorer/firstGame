@@ -22,7 +22,6 @@ interface BackgroundProps {
       }
     | undefined
   >;
-  armySelected: SharedValue<Boolean>;
 }
 
 const Background: FC<BackgroundProps> = ({
@@ -30,7 +29,6 @@ const Background: FC<BackgroundProps> = ({
   backgroundHeight = screenHeight,
   children,
   lastTap,
-  armySelected,
 }) => {
   const styles = useStyles();
   const offset = useSharedValue({ x: 0, y: 0 });
@@ -60,13 +58,10 @@ const Background: FC<BackgroundProps> = ({
     });
 
   const touchGesture = Gesture.Tap().onStart((e) => {
-    lastTap.value =
-      armySelected.value === true
-        ? {
-            x: e.x,
-            y: e.y,
-          }
-        : undefined;
+    lastTap.value = {
+      x: e.x,
+      y: e.y,
+    };
   });
 
   const animatedStyles = useAnimatedStyle(() => {
