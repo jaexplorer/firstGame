@@ -58,6 +58,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
     position: useSharedValue({ x: player.x, y: player.y }),
     isPlayer: player.isPlayer,
     color: player.color,
+    isSelected: useSharedValue(false),
   }));
 
   const grid = useMemo<number[][]>(() => {
@@ -104,13 +105,6 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
 
     // setProposedArmyPath(interp.getPoints(80));
   };
-
-  // useDerivedValue(() => {
-  //   if (armySelected.value === true && lastTap.value !== undefined) {
-  //     const result = runOnJS(findPathPoints)(lastTap.value.x, lastTap.value.y);
-  //     return result;
-  //   }
-  // }, [armySelected, lastTap]);
 
   return (
     <View style={styles.rootContainer}>

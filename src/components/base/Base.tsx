@@ -38,6 +38,7 @@ const Base: FC<BaseProps> = ({
 }) => {
   const styles = useStyles();
   const base = bases[index];
+  const isGestureActive = useSharedValue(false);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -74,9 +75,18 @@ const Base: FC<BaseProps> = ({
     })
     .onEnd((e) => {});
 
-  // const touchGesture = Gesture.Tap().onStart(() => {
-  //   armySelected.value = !armySelected.value;
-  // });
+  const touchGesture = Gesture.Tap().onStart(() => {
+    bases.forEach((base, i) => {
+      base.isSelected.value = i === index ? true : false;
+    });
+  });
+
+  //   useDerivedValue(() => {
+  //   if (base.isSelected.value === true) {
+  //     const result = runOnJS(findPathPoints)(lastTap.value.x, lastTap.value.y);
+  //     return result;
+  //   }
+  // }, [armySelected, lastTap]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -85,11 +95,11 @@ const Base: FC<BaseProps> = ({
         { translateY: withSpring(base.position.value.y) },
       ],
       backgroundColor: base.color,
-      borderWidth: 0,
+      borderWidth: base.isSelected.value ? 1 : 0,
     };
   });
 
-  const race = Gesture.Race(panGesture);
+  const race = Gesture.Race(touchGesture, panGesture);
 
   return (
     <GestureDetector gesture={race}>
