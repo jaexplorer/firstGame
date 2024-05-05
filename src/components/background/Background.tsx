@@ -10,18 +10,13 @@ import Animated, {
   SharedValue,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import { LastTap } from "../../models/Level";
 
 interface BackgroundProps {
   backgroundWidth?: number;
   backgroundHeight?: number;
   children: ReactNode;
-  lastTap: SharedValue<
-    | {
-        x: number;
-        y: number;
-      }
-    | undefined
-  >;
+  lastTap: SharedValue<LastTap | undefined>;
 }
 
 const Background: FC<BackgroundProps> = ({

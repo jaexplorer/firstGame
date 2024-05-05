@@ -8,8 +8,7 @@ import Wall from "../../components/wall/Wall";
 import { Level as LevelType } from "../../models/Level";
 import { ApplicationState } from "../../redux/state/ApplicationState";
 import { useStyles } from "./LevelStyles";
-import { CurveInterpolator } from "curve-interpolator";
-import PF from "pathfinding";
+import PF, { Grid } from "pathfinding";
 import {
   runOnJS,
   useDerivedValue,
@@ -17,7 +16,7 @@ import {
 } from "react-native-reanimated";
 import Svg, { Polyline } from "react-native-svg";
 import { CELL_SIZE } from "../../constants/GameConstants";
-import { convertToCellCoordinates, floorToInterval } from "./LevelUtils";
+import { createGrid, floorToInterval } from "./LevelUtils";
 import Base from "../../components/base/Base";
 
 interface LevelProps {
@@ -59,52 +58,17 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
     isPlayer: player.isPlayer,
     color: player.color,
     isSelected: useSharedValue(false),
+    proposedPath: useSharedValue([]),
   }));
 
   const grid = useMemo<number[][]>(() => {
-    return Array.from({ length: level.height / CELL_SIZE }, (_, y) =>
-      Array.from({ length: level.width / CELL_SIZE }, (_, x) => {
-        const WALL_BUFFER = CELL_SIZE;
-        const isWall = level.walls.some(
-          (wall) =>
-            x * CELL_SIZE >= wall.x - WALL_BUFFER &&
-            x * CELL_SIZE < wall.x + wall.width + WALL_BUFFER &&
-            y * CELL_SIZE >= wall.y - WALL_BUFFER &&
-            y * CELL_SIZE < wall.y + wall.height + WALL_BUFFER
-        );
-
-        return isWall ? 1 : 0;
-      })
-    );
+    return createGrid(level);
   }, [level]);
 
-  const map = useMemo(() => {
+  const map = useMemo<Grid>(() => {
     const gridF = new PF.Grid(grid);
     return gridF;
   }, [grid]);
-
-  const findPathPoints = (x: number, y: number) => {
-    const { cellX, cellY } = convertToCellCoordinates(x, y);
-
-    const finder = new PF.AStarFinder({
-      allowDiagonal: true,
-      dontCrossCorners: false,
-    });
-    const proposedPath: number[][] = finder.findPath(
-      1,
-      1,
-      cellX,
-      cellY,
-      map.clone()
-    );
-    const newPath = PF.Util.smoothenPath(map.clone(), proposedPath);
-    const interp = new CurveInterpolator(newPath, {
-      tension: 0.5,
-      alpha: 0.5,
-    });
-
-    // setProposedArmyPath(interp.getPoints(80));
-  };
 
   return (
     <View style={styles.rootContainer}>
@@ -172,6 +136,8 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 backgroundWidth={level.width}
                 backgroundHeight={level.height}
                 walls={level.walls}
+                lastTap={lastTap}
+                map={map}
               />
             ))}
           </>

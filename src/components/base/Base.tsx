@@ -10,6 +10,7 @@ import Animated, {
   SharedValue,
   withSpring,
   useDerivedValue,
+  runOnJS,
 } from "react-native-reanimated";
 import {
   GestureHandlerRootView,
@@ -20,6 +21,9 @@ import { screenHeight, screenWidth } from "../../constants/ScreenSize";
 import { WallProps } from "../wall/Wall";
 import { isCollidingWithWalls } from "./BaseUtils";
 import { BASE_SIZE, BaseShared } from "../../models/Base";
+import { LastTap } from "../../models/Level";
+import { Grid } from "pathfinding";
+import { findPathPoints } from "../../screens/level/LevelUtils";
 
 interface BaseProps {
   backgroundWidth?: number;
@@ -27,6 +31,8 @@ interface BaseProps {
   walls?: WallProps[];
   index: number;
   bases: BaseShared[];
+  lastTap: SharedValue<LastTap | undefined>;
+  map: Grid;
 }
 
 const Base: FC<BaseProps> = ({
@@ -35,6 +41,8 @@ const Base: FC<BaseProps> = ({
   walls = [],
   index,
   bases,
+  lastTap,
+  map,
 }) => {
   const styles = useStyles();
   const base = bases[index];
@@ -81,12 +89,20 @@ const Base: FC<BaseProps> = ({
     });
   });
 
-  //   useDerivedValue(() => {
-  //   if (base.isSelected.value === true) {
-  //     const result = runOnJS(findPathPoints)(lastTap.value.x, lastTap.value.y);
-  //     return result;
-  //   }
-  // }, [armySelected, lastTap]);
+  useDerivedValue(() => {
+    if (base.isSelected.value === true && lastTap.value !== undefined) {
+      const result = runOnJS(() => {
+        base.proposedPath.value = findPathPoints(
+          base.position.value.x,
+          base.position.value.y,
+          lastTap.value!.x,
+          lastTap.value!.y,
+          map
+        );
+      });
+      return result;
+    }
+  }, [lastTap]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

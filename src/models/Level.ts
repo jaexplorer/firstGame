@@ -8,3 +8,8 @@ export interface Level {
   walls: Wall[];
   players: Base[];
 }
+
+export interface LastTap {
+  x: number;
+  y: number;
+}

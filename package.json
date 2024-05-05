@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/pathfinding": "^0.0.9",
     "@types/react": "~18.2.45",
     "reactotron-react-native": "^5.1.6",
     "reactotron-redux": "^3.1.9",

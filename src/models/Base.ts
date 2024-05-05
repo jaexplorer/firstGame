@@ -19,6 +19,7 @@ export interface BaseShared {
   isPlayer?: boolean;
   color: string;
   isSelected: SharedValue<boolean>;
+  proposedPath: SharedValue<number[][]>;
 }
 
 export const BASE_SIZE = 30;
