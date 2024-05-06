@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
   clamp,
   SharedValue,
+  runOnJS,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { LastTap } from "../../models/Level";
@@ -16,14 +17,14 @@ interface BackgroundProps {
   backgroundWidth?: number;
   backgroundHeight?: number;
   children: ReactNode;
-  lastTap: SharedValue<LastTap | undefined>;
+  setLastTap: (position: LastTap) => void;
 }
 
 const Background: FC<BackgroundProps> = ({
   backgroundWidth = screenWidth,
   backgroundHeight = screenHeight,
   children,
-  lastTap,
+  setLastTap,
 }) => {
   const styles = useStyles();
   const offset = useSharedValue({ x: 0, y: 0 });
@@ -53,10 +54,10 @@ const Background: FC<BackgroundProps> = ({
     });
 
   const touchGesture = Gesture.Tap().onStart((e) => {
-    lastTap.value = {
+    runOnJS(setLastTap)({
       x: e.x,
       y: e.y,
-    };
+    });
   });
 
   const animatedStyles = useAnimatedStyle(() => {

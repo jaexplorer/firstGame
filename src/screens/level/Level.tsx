@@ -1,23 +1,26 @@
-import React, { FC, useMemo, useState } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import { StatusBar as STB, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import Background from "../../components/background/Background";
 import Wall from "../../components/wall/Wall";
-import { Level as LevelType } from "../../models/Level";
+import { LastTap, Level as LevelType, Paths } from "../../models/Level";
 import { ApplicationState } from "../../redux/state/ApplicationState";
 import { useStyles } from "./LevelStyles";
 import PF, { Grid } from "pathfinding";
 import {
   runOnJS,
+  runOnUI,
+  useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
 import Svg, { Polyline } from "react-native-svg";
 import { CELL_SIZE } from "../../constants/GameConstants";
-import { createGrid, floorToInterval } from "./LevelUtils";
+import { createGrid, findPathPoints, floorToInterval } from "./LevelUtils";
 import Base from "../../components/base/Base";
+import { BASE_SIZE } from "../../models/Base";
 
 interface LevelProps {
   levels: LevelType[] | undefined;
@@ -34,9 +37,8 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const heightDifference = insets.bottom + insets.top + 10 + STB.currentHeight!;
-  const lastTap = useSharedValue<{ x: number; y: number } | undefined>(
-    undefined
-  );
+  const [lastTap, setLastTap] = useState<LastTap | undefined>(undefined);
+  const [paths, setPaths] = useState<Paths[]>([{ name: "", path: [] }]);
 
   const level = useMemo<LevelType | undefined>(() => {
     if (!!levels && !!levels.length && selectedLevel !== undefined) {
@@ -57,8 +59,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
     position: useSharedValue({ x: player.x, y: player.y }),
     isPlayer: player.isPlayer,
     color: player.color,
-    isSelected: useSharedValue(false),
-    proposedPath: useSharedValue([]),
+    isSelected: useSharedValue(0),
   }));
 
   const grid = useMemo<number[][]>(() => {
@@ -79,7 +80,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
         <Background
           backgroundWidth={level.width}
           backgroundHeight={level.height}
-          lastTap={lastTap}
+          setLastTap={setLastTap}
         >
           <>
             {!!grid &&
@@ -109,11 +110,11 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 height={wall.height}
               />
             ))}
-            {/* {proposedArmyPath && (
-              <View style={styles.poly}>
+            {paths.map((p, idx) => (
+              <View style={styles.poly} key={idx}>
                 <Svg style={StyleSheet.absoluteFill}>
                   <Polyline
-                    points={proposedArmyPath
+                    points={p.path
                       .map(
                         (point) =>
                           `${point[0] * CELL_SIZE + CELL_SIZE / 2},${
@@ -127,7 +128,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                   />
                 </Svg>
               </View>
-            )} */}
+            ))}
             {bases.map((_, idx) => (
               <Base
                 key={idx}
@@ -138,6 +139,8 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 walls={level.walls}
                 lastTap={lastTap}
                 map={map}
+                paths={paths}
+                setPaths={setPaths}
               />
             ))}
           </>

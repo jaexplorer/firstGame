@@ -11,6 +11,8 @@ import Animated, {
   withSpring,
   useDerivedValue,
   runOnJS,
+  useAnimatedReaction,
+  runOnUI,
 } from "react-native-reanimated";
 import {
   GestureHandlerRootView,
@@ -21,9 +23,13 @@ import { screenHeight, screenWidth } from "../../constants/ScreenSize";
 import { WallProps } from "../wall/Wall";
 import { isCollidingWithWalls } from "./BaseUtils";
 import { BASE_SIZE, BaseShared } from "../../models/Base";
-import { LastTap } from "../../models/Level";
-import { Grid } from "pathfinding";
-import { findPathPoints } from "../../screens/level/LevelUtils";
+import { LastTap, Paths } from "../../models/Level";
+import PF, { Grid } from "pathfinding";
+import {
+  convertToCellCoordinates,
+  findPathPoints,
+} from "../../screens/level/LevelUtils";
+import { CurveInterpolator } from "curve-interpolator";
 
 interface BaseProps {
   backgroundWidth?: number;
@@ -31,8 +37,10 @@ interface BaseProps {
   walls?: WallProps[];
   index: number;
   bases: BaseShared[];
-  lastTap: SharedValue<LastTap | undefined>;
+  lastTap: LastTap | undefined;
   map: Grid;
+  paths: Paths[];
+  setPaths: (paths: Paths[]) => void;
 }
 
 const Base: FC<BaseProps> = ({
@@ -43,6 +51,8 @@ const Base: FC<BaseProps> = ({
   bases,
   lastTap,
   map,
+  paths,
+  setPaths,
 }) => {
   const styles = useStyles();
   const base = bases[index];
@@ -85,22 +95,30 @@ const Base: FC<BaseProps> = ({
 
   const touchGesture = Gesture.Tap().onStart(() => {
     bases.forEach((base, i) => {
-      base.isSelected.value = i === index ? true : false;
+      base.isSelected.value = i === index ? 1 : 0;
     });
   });
 
-  useDerivedValue(() => {
-    if (base.isSelected.value === true && lastTap.value !== undefined) {
-      const result = runOnJS(() => {
-        base.proposedPath.value = findPathPoints(
-          base.position.value.x,
-          base.position.value.y,
-          lastTap.value!.x,
-          lastTap.value!.y,
-          map
-        );
-      });
-      return result;
+  useEffect(() => {
+    if (base.isSelected.value === 1 && lastTap !== undefined) {
+      const result = findPathPoints(
+        base.position.value.x + BASE_SIZE / 2,
+        base.position.value.y + BASE_SIZE / 2,
+        lastTap.x,
+        lastTap.y,
+        map
+      );
+
+      const existingIndex = paths.findIndex((path) => path.name === base.color);
+
+      if (existingIndex !== -1) {
+        const updatedPaths = [...paths];
+        updatedPaths[existingIndex].path = result;
+        setPaths(updatedPaths);
+      } else {
+        setPaths([...paths, { name: base.color, path: result }]);
+      }
+      base.isSelected.value = 0;
     }
   }, [lastTap]);
 
@@ -111,7 +129,7 @@ const Base: FC<BaseProps> = ({
         { translateY: withSpring(base.position.value.y) },
       ],
       backgroundColor: base.color,
-      borderWidth: base.isSelected.value ? 1 : 0,
+      borderWidth: base.isSelected.value,
     };
   });
 

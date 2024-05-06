@@ -13,3 +13,8 @@ export interface LastTap {
   x: number;
   y: number;
 }
+
+export interface Paths {
+  name: string;
+  path: number[][];
+}

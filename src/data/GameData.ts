@@ -33,7 +33,7 @@ export const level_0: Level = {
   ],
   players: [
     {
-      x: 0,
+      x: 20,
       y: 0,
       isPlayer: true,
       color: "green",
