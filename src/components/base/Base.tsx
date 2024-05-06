@@ -22,7 +22,7 @@ import {
 import { screenHeight, screenWidth } from "../../constants/ScreenSize";
 import { WallProps } from "../wall/Wall";
 import { isCollidingWithWalls } from "./BaseUtils";
-import { BASE_SIZE, BaseShared } from "../../models/Base";
+import { BaseShared } from "../../models/Base";
 import { LastTap, Paths } from "../../models/Level";
 import PF, { Grid } from "pathfinding";
 import {
@@ -30,6 +30,7 @@ import {
   findPathPoints,
 } from "../../screens/level/LevelUtils";
 import { CurveInterpolator } from "curve-interpolator";
+import { BASE_SIZE } from "../../constants/GameConstants";
 
 interface BaseProps {
   backgroundWidth?: number;
@@ -102,8 +103,8 @@ const Base: FC<BaseProps> = ({
   useEffect(() => {
     if (base.isSelected.value === 1 && lastTap !== undefined) {
       const result = findPathPoints(
-        base.position.value.x + BASE_SIZE / 2,
-        base.position.value.y + BASE_SIZE / 2,
+        base.position.value.x,
+        base.position.value.y,
         lastTap.x,
         lastTap.y,
         map

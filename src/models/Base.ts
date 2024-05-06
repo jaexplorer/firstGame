@@ -20,5 +20,3 @@ export interface BaseShared {
   color: string;
   isSelected: SharedValue<number>;
 }
-
-export const BASE_SIZE = 30;

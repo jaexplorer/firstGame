@@ -20,7 +20,6 @@ import Svg, { Polyline } from "react-native-svg";
 import { CELL_SIZE } from "../../constants/GameConstants";
 import { createGrid, findPathPoints, floorToInterval } from "./LevelUtils";
 import Base from "../../components/base/Base";
-import { BASE_SIZE } from "../../models/Base";
 
 interface LevelProps {
   levels: LevelType[] | undefined;

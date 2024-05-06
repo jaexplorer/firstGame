@@ -1,4 +1,4 @@
-import { CELL_SIZE } from "../../constants/GameConstants";
+import { BASE_SIZE, CELL_SIZE } from "../../constants/GameConstants";
 import { Wall } from "../../models/Wall";
 import { Tile } from "./Level";
 import PF, { Grid } from "pathfinding";
@@ -60,6 +60,7 @@ export const findPathPoints = (
   endY: number,
   map: Grid
 ): number[][] => {
+  // TODO: if endCell is a wall then we need to find a path to the closest cell that is not a wall
   const startCell = convertToCellCoordinates(startX, startY);
   const endCell = convertToCellCoordinates(endX, endY);
 
@@ -74,7 +75,14 @@ export const findPathPoints = (
     endCell.cellY,
     map.clone()
   );
-  const newPath = PF.Util.smoothenPath(map.clone(), proposedPath);
+  let newPath: number[][] = PF.Util.smoothenPath(map.clone(), proposedPath);
+
+  // To counter the start point of the path not being at the center of the base
+  newPath[0] = [
+    (startX + BASE_SIZE / 2 - CELL_SIZE / 2) / CELL_SIZE,
+    (startY + BASE_SIZE / 2 - CELL_SIZE / 2) / CELL_SIZE,
+  ];
+
   const interp = new CurveInterpolator(newPath, {
     tension: 0.5,
     alpha: 0.5,
