@@ -58,6 +58,7 @@ const Base: FC<BaseProps> = ({
   const styles = useStyles();
   const base = bases[index];
   const isGestureActive = useSharedValue(false);
+  // TODO: Add moving upon creating a path
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
