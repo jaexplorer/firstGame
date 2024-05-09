@@ -15,5 +15,10 @@ export const useStyles = () => {
       marginTop: 5,
       overflow: "hidden",
     },
+    poly: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: "center",
+      alignItems: "center",
+    },
   });
 };

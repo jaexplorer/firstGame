@@ -23,3 +23,7 @@ export const isCollidingWithWalls = (
     isColliding({ x: offset.x, y: offset.y, width, height }, wall)
   );
 };
+
+export const getDistance = ([x1, y1]: number[], [x2, y2]: number[]) => {
+  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+};

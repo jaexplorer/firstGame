@@ -3,16 +3,9 @@ import { View, Text, Image } from "react-native";
 import { useStyles } from "./BaseStyles";
 import Animated, {
   useAnimatedStyle,
-  useSharedValue,
-  withClamp,
   clamp,
-  withDecay,
-  SharedValue,
   withSpring,
-  useDerivedValue,
-  runOnJS,
-  useAnimatedReaction,
-  runOnUI,
+  withSequence,
 } from "react-native-reanimated";
 import {
   GestureHandlerRootView,
@@ -21,16 +14,16 @@ import {
 } from "react-native-gesture-handler";
 import { screenHeight, screenWidth } from "../../constants/ScreenSize";
 import { WallProps } from "../wall/Wall";
-import { isCollidingWithWalls } from "./BaseUtils";
+import { getDistance, isCollidingWithWalls } from "./BaseUtils";
 import { BaseShared } from "../../models/Base";
 import { LastTap, Paths } from "../../models/Level";
-import PF, { Grid } from "pathfinding";
+import { Grid } from "pathfinding";
+import { findPathPoints } from "../../screens/level/LevelUtils";
 import {
-  convertToCellCoordinates,
-  findPathPoints,
-} from "../../screens/level/LevelUtils";
-import { CurveInterpolator } from "curve-interpolator";
-import { BASE_SIZE } from "../../constants/GameConstants";
+  BASE_SIZE,
+  BASE_SPEED,
+  CELL_SIZE,
+} from "../../constants/GameConstants";
 
 interface BaseProps {
   backgroundWidth?: number;
@@ -57,8 +50,7 @@ const Base: FC<BaseProps> = ({
 }) => {
   const styles = useStyles();
   const base = bases[index];
-  const isGestureActive = useSharedValue(false);
-  // TODO: Add moving upon creating a path
+  const path = paths[index];
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -92,8 +84,7 @@ const Base: FC<BaseProps> = ({
           y: clampedY,
         };
       }
-    })
-    .onEnd((e) => {});
+    });
 
   const touchGesture = Gesture.Tap().onStart(() => {
     bases.forEach((base, i) => {
@@ -123,6 +114,30 @@ const Base: FC<BaseProps> = ({
       base.isSelected.value = 0;
     }
   }, [lastTap]);
+
+  const moveAlongPath = (path: number[][]) => {
+    let previousPoint = path[0];
+    const animations = path.map(([x, y]) => {
+      const dist = getDistance([previousPoint[0], previousPoint[1]], [x, y]);
+      const duration = ((dist * CELL_SIZE) / BASE_SPEED) * 1000;
+      previousPoint = [x, y];
+      return withSpring(
+        {
+          x: x * CELL_SIZE - (BASE_SIZE - CELL_SIZE) / 2,
+          y: y * CELL_SIZE - (BASE_SIZE - CELL_SIZE) / 2,
+        },
+        { duration: duration }
+      );
+    });
+
+    return withSequence(...animations);
+  };
+
+  useEffect(() => {
+    if (path !== undefined && path.path.length > 0) {
+      base.position.value = moveAlongPath(path.path);
+    }
+  }, [path?.path]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

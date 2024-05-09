@@ -9,9 +9,10 @@ import { LastTap, Level as LevelType, Paths } from "../../models/Level";
 import { ApplicationState } from "../../redux/state/ApplicationState";
 import { useStyles } from "./LevelStyles";
 import PF, { Grid } from "pathfinding";
-import {
+import Animated, {
   runOnJS,
   runOnUI,
+  useAnimatedProps,
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
@@ -20,6 +21,7 @@ import Svg, { Polyline } from "react-native-svg";
 import { CELL_SIZE } from "../../constants/GameConstants";
 import { createGrid, findPathPoints, floorToInterval } from "./LevelUtils";
 import Base from "../../components/base/Base";
+import { Canvas, Points, vec } from "@shopify/react-native-skia";
 
 interface LevelProps {
   levels: LevelType[] | undefined;
@@ -32,12 +34,15 @@ export interface Tile {
   isWall?: boolean;
 }
 
+const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
+
 const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const heightDifference = insets.bottom + insets.top + 10 + STB.currentHeight!;
   const [lastTap, setLastTap] = useState<LastTap | undefined>(undefined);
-  const [paths, setPaths] = useState<Paths[]>([{ name: "", path: [] }]);
+  const path = useSharedValue<number[][]>([]);
+  const isDrawing = useSharedValue(0);
 
   const level = useMemo<LevelType | undefined>(() => {
     if (!!levels && !!levels.length && selectedLevel !== undefined) {
@@ -61,6 +66,10 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
     isSelected: useSharedValue(0),
   }));
 
+  const [paths, setPaths] = useState<Paths[]>(
+    level.players.map((player) => ({ name: player.color, path: [] }))
+  );
+
   const grid = useMemo<number[][]>(() => {
     return createGrid(level);
   }, [level]);
@@ -69,6 +78,17 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
     const gridF = new PF.Grid(grid);
     return gridF;
   }, [grid]);
+
+  const points = useDerivedValue(
+    () =>
+      path.value.map((point) =>
+        vec(
+          point[0] * CELL_SIZE + CELL_SIZE / 2,
+          point[1] * CELL_SIZE + CELL_SIZE / 2
+        )
+      ),
+    [isDrawing]
+  );
 
   return (
     <View style={styles.rootContainer}>
@@ -79,6 +99,8 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
         <Background
           backgroundWidth={level.width}
           backgroundHeight={level.height}
+          path={path}
+          isDrawing={isDrawing}
           setLastTap={setLastTap}
         >
           <>
@@ -109,25 +131,32 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 height={wall.height}
               />
             ))}
-            {paths.map((p, idx) => (
-              <View style={styles.poly} key={idx}>
-                <Svg style={StyleSheet.absoluteFill}>
-                  <Polyline
-                    points={p.path
-                      .map(
-                        (point) =>
-                          `${point[0] * CELL_SIZE + CELL_SIZE / 2},${
-                            point[1] * CELL_SIZE + CELL_SIZE / 2
-                          }`
-                      )
-                      .join(" ")}
-                    fill="none"
-                    stroke="red"
-                    strokeWidth="3"
-                  />
-                </Svg>
-              </View>
-            ))}
+
+            <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+              <Points
+                points={points}
+                mode="polygon"
+                color="lightblue"
+                style="stroke"
+                strokeWidth={4}
+              />
+              {paths.map((p, idx) => (
+                <Points
+                  key={idx}
+                  points={p.path.map((point) =>
+                    vec(
+                      point[0] * CELL_SIZE + CELL_SIZE / 2,
+                      point[1] * CELL_SIZE + CELL_SIZE / 2
+                    )
+                  )}
+                  mode="polygon"
+                  color="red"
+                  style="stroke"
+                  strokeWidth={4}
+                />
+              ))}
+            </Canvas>
+
             {bases.map((_, idx) => (
               <Base
                 key={idx}

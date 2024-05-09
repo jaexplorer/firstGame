@@ -18,3 +18,8 @@ export interface Paths {
   name: string;
   path: number[][];
 }
+
+export interface Cell {
+  cellX: number;
+  cellY: number;
+}
