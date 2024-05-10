@@ -6,6 +6,7 @@ import Animated, {
   clamp,
   withSpring,
   withSequence,
+  SharedValue,
 } from "react-native-reanimated";
 import {
   GestureHandlerRootView,
@@ -18,7 +19,12 @@ import { getDistance, isCollidingWithWalls } from "./BaseUtils";
 import { BaseShared } from "../../models/Base";
 import { LastTap, Paths } from "../../models/Level";
 import { Grid } from "pathfinding";
-import { findPathPoints } from "../../screens/level/LevelUtils";
+import {
+  connectPaths,
+  convertToCellCoordinates,
+  findPathPoints,
+  splitPathByWalls,
+} from "../../screens/level/LevelUtils";
 import {
   BASE_SIZE,
   BASE_SPEED,
@@ -34,6 +40,8 @@ interface BaseProps {
   lastTap: LastTap | undefined;
   map: Grid;
   paths: Paths[];
+  isDrawing: boolean;
+  drawnPath: SharedValue<number[][]>;
   setPaths: (paths: Paths[]) => void;
 }
 
@@ -46,6 +54,8 @@ const Base: FC<BaseProps> = ({
   lastTap,
   map,
   paths,
+  isDrawing,
+  drawnPath,
   setPaths,
 }) => {
   const styles = useStyles();
@@ -114,6 +124,38 @@ const Base: FC<BaseProps> = ({
       base.isSelected.value = 0;
     }
   }, [lastTap]);
+
+  useEffect(() => {
+    if (base.isSelected.value === 1 && isDrawing === false) {
+      console.log("Drawn", drawnPath.value);
+      const split = splitPathByWalls(drawnPath.value, map);
+      console.log("Split", split);
+      const startCell = convertToCellCoordinates(
+        base.position.value.x,
+        base.position.value.y
+      );
+
+      console.log("Chain input", [
+        [[startCell.cellX, startCell.cellY]],
+        ...split,
+      ]);
+      const chain = connectPaths(
+        [[[startCell.cellX, startCell.cellY]], ...split],
+        map
+      );
+      console.log("chain", chain);
+      const existingIndex = paths.findIndex((path) => path.name === base.color);
+
+      if (existingIndex !== -1) {
+        const updatedPaths = [...paths];
+        updatedPaths[existingIndex].path = chain;
+        setPaths(updatedPaths);
+      } else {
+        setPaths([...paths, { name: base.color, path: chain }]);
+      }
+      base.isSelected.value = 0;
+    }
+  }, [isDrawing]);
 
   const moveAlongPath = (path: number[][]) => {
     let previousPoint = path[0];

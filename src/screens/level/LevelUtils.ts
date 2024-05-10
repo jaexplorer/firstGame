@@ -23,7 +23,12 @@ export const isWalkable = (location: Tile, walls: Wall[]) => {
   return true;
 };
 
-export const convertToCellCoordinates = (x: number, y: number) => {
+export const convertToCellCoordinates = (
+  x: number,
+  y: number,
+  skip?: boolean
+) => {
+  if (skip) return { cellX: x, cellY: y };
   const cellX = Math.floor(x / CELL_SIZE);
   const cellY = Math.floor(y / CELL_SIZE);
   return { cellX, cellY };
@@ -141,10 +146,11 @@ export const findPathPoints = (
   startY: number,
   endX: number,
   endY: number,
-  map: Grid
+  map: Grid,
+  skip?: boolean
 ): number[][] => {
-  const startCell = convertToCellCoordinates(startX, startY);
-  let endCell = convertToCellCoordinates(endX, endY);
+  const startCell = convertToCellCoordinates(startX, startY, skip);
+  let endCell = convertToCellCoordinates(endX, endY, skip);
 
   // If the end cell is not walkable, find the nearest walkable cell
   if (map.isWalkableAt(endCell.cellX, endCell.cellY) === false) {
@@ -186,4 +192,60 @@ export const findPathPoints = (
   });
 
   return interp.getPoints(80) as number[][];
+};
+
+export const splitPathByWalls = (path: number[][], map: Grid): number[][][] => {
+  const result: number[][][] = [];
+  let currentPath: number[][] = [];
+
+  for (const point of path) {
+    if (map.isWalkableAt(point[0], point[1])) {
+      currentPath.push(point);
+    } else {
+      if (currentPath.length > 0) {
+        result.push(currentPath);
+        currentPath = [];
+      }
+    }
+  }
+
+  // Add the last path if it's not empty
+  if (currentPath.length > 0) {
+    result.push(currentPath);
+  }
+
+  return result;
+};
+
+export const connectPaths = (paths: number[][][], map: Grid): number[][] => {
+  const flattenedArray: number[][] = [];
+
+  for (let i = 0; i < paths.length; i++) {
+    for (let j = 0; j < paths[i].length; j++) {
+      flattenedArray.push(paths[i][j]);
+    }
+  }
+
+  return flattenedArray;
+  // let connectedPath: number[][] = paths[0];
+
+  // paths.forEach((path, idx) => {
+  //   if (idx === 0) return;
+
+  //   const startCell = connectedPath[connectedPath.length - 1];
+  //   const endCell = path[0];
+
+  //   const connectingPath = findPathPoints(
+  //     startCell[0],
+  //     startCell[1],
+  //     endCell[0],
+  //     endCell[1],
+  //     map,
+  //     true
+  //   );
+
+  //   connectedPath = [...connectedPath, ...connectingPath, ...path];
+  // });
+
+  // return connectedPath;
 };

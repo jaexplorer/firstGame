@@ -22,6 +22,7 @@ import { CELL_SIZE } from "../../constants/GameConstants";
 import { createGrid, findPathPoints, floorToInterval } from "./LevelUtils";
 import Base from "../../components/base/Base";
 import { Canvas, Points, vec } from "@shopify/react-native-skia";
+import { CurveInterpolator } from "curve-interpolator";
 
 interface LevelProps {
   levels: LevelType[] | undefined;
@@ -41,8 +42,8 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   const insets = useSafeAreaInsets();
   const heightDifference = insets.bottom + insets.top + 10 + STB.currentHeight!;
   const [lastTap, setLastTap] = useState<LastTap | undefined>(undefined);
-  const path = useSharedValue<number[][]>([]);
-  const isDrawing = useSharedValue(0);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const drawnPath = useSharedValue<number[][]>([]);
 
   const level = useMemo<LevelType | undefined>(() => {
     if (!!levels && !!levels.length && selectedLevel !== undefined) {
@@ -80,13 +81,14 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   }, [grid]);
 
   const points = useDerivedValue(
-    () =>
-      path.value.map((point) =>
-        vec(
-          point[0] * CELL_SIZE + CELL_SIZE / 2,
-          point[1] * CELL_SIZE + CELL_SIZE / 2
-        )
-      ),
+    // () =>
+    //   drawnPath.value.map((point) =>
+    //     vec(
+    //       point[0] * CELL_SIZE + CELL_SIZE / 2,
+    //       point[1] * CELL_SIZE + CELL_SIZE / 2
+    //     )
+    //   ),
+    () => drawnPath.value.map((point) => vec(point[0], point[1])),
     [isDrawing]
   );
 
@@ -99,8 +101,8 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
         <Background
           backgroundWidth={level.width}
           backgroundHeight={level.height}
-          path={path}
-          isDrawing={isDrawing}
+          drawnPath={drawnPath}
+          setIsDrawing={setIsDrawing}
           setLastTap={setLastTap}
         >
           <>
@@ -168,7 +170,9 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 lastTap={lastTap}
                 map={map}
                 paths={paths}
+                isDrawing={isDrawing}
                 setPaths={setPaths}
+                drawnPath={drawnPath}
               />
             ))}
           </>
