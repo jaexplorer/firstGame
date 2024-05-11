@@ -145,6 +145,15 @@ export const findNearestWalkableCell = (
   return null;
 };
 
+export const smoothenPath = (path: number[][], map: Grid): number[][] => {
+  const interp = new CurveInterpolator(path, {
+    tension: 0.5,
+    alpha: 0.5,
+  });
+
+  return interp.getPoints(80) as number[][];
+};
+
 /**
  * Accepts real coordinates and finds a path with simplifed coordinates via map
  **/
@@ -153,7 +162,8 @@ export const findPathPoints = (
   startY: number,
   endX: number,
   endY: number,
-  map: Grid
+  map: Grid,
+  skipSmooth?: boolean
 ): number[][] => {
   const startCell = convertToCellCoordinates(startX, startY);
   let endCell = convertToCellCoordinates(endX, endY);
@@ -184,20 +194,20 @@ export const findPathPoints = (
     endCell.cellY,
     map.clone()
   );
+
   let newPath: number[][] = PF.Util.smoothenPath(map.clone(), proposedPath);
 
+  if (skipSmooth) return newPath;
+
+  const smoothPath = smoothenPath(newPath, map);
+
   // To adjust the start point of the path not being at the center of the base
-  newPath[0] = [
+  smoothPath[0] = [
     (startX + BASE_SIZE / 2 - CELL_SIZE / 2) / CELL_SIZE,
     (startY + BASE_SIZE / 2 - CELL_SIZE / 2) / CELL_SIZE,
   ];
 
-  const interp = new CurveInterpolator(newPath, {
-    tension: 0.5,
-    alpha: 0.5,
-  });
-
-  return interp.getPoints(80) as number[][];
+  return smoothPath;
 };
 
 /**
@@ -209,7 +219,7 @@ export const splitPathByWalls = (path: number[][], map: Grid): number[][][] => {
 
   for (const point of path) {
     const cell = convertToCellCoordinates(point[0], point[1]);
-    if (map.isWalkableAt(cell[0], cell[1])) {
+    if (map.isWalkableAt(cell.cellX, cell.cellY)) {
       currentPath.push(point);
     } else {
       if (currentPath.length > 0) {
@@ -248,19 +258,25 @@ export const connectPaths = (paths: number[][][], map: Grid): number[][] => {
       map
     );
 
-    links.push(link);
+    // Remove the start and end points
+    links.push(link.slice(1, link.length - 1));
   });
 
   let finalPath: number[][] = [];
 
   paths.forEach((path, idx) => {
     // If the last one in the list, theres no links remaining
+    const simplifedPath: number[][] = path.map((point) => {
+      const cell = convertToCellCoordinates(point[0], point[1]);
+      return [cell.cellX, cell.cellY];
+    });
+
     if (idx === paths.length - 1) {
-      finalPath = [...finalPath, ...path];
+      finalPath = [...finalPath, ...simplifedPath];
     } else {
-      finalPath = [...finalPath, ...path, ...links[idx]];
+      finalPath = [...finalPath, ...simplifedPath, ...links[idx]];
     }
   });
 
-  return finalPath;
+  return smoothenPath(finalPath, map);
 };

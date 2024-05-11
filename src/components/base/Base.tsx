@@ -102,6 +102,19 @@ const Base: FC<BaseProps> = ({
     });
   });
 
+  const updatePath = (result: number[][]) => {
+    const existingIndex = paths.findIndex((path) => path.name === base.color);
+
+    if (existingIndex !== -1) {
+      const updatedPaths = [...paths];
+      updatedPaths[existingIndex].path = result;
+      setPaths(updatedPaths);
+    } else {
+      setPaths([...paths, { name: base.color, path: result }]);
+    }
+    base.isSelected.value = 0;
+  };
+
   useEffect(() => {
     if (base.isSelected.value === 1 && lastTap !== undefined) {
       const result = findPathPoints(
@@ -112,16 +125,7 @@ const Base: FC<BaseProps> = ({
         map
       );
 
-      const existingIndex = paths.findIndex((path) => path.name === base.color);
-
-      if (existingIndex !== -1) {
-        const updatedPaths = [...paths];
-        updatedPaths[existingIndex].path = result;
-        setPaths(updatedPaths);
-      } else {
-        setPaths([...paths, { name: base.color, path: result }]);
-      }
-      base.isSelected.value = 0;
+      updatePath(result);
     }
   }, [lastTap]);
 
@@ -131,28 +135,12 @@ const Base: FC<BaseProps> = ({
       isDrawing === false &&
       drawnPath.value.length > 0
     ) {
-      console.log("Drawn", drawnPath.value);
       const split = splitPathByWalls(drawnPath.value, map);
-      console.log("Split", split);
-      console.log("Chain input", [
-        [[base.position.value.x, base.position.value.y]],
-        ...split,
-      ]);
       const chain = connectPaths(
         [[[base.position.value.x, base.position.value.y]], ...split],
         map
       );
-      console.log("chain", chain);
-      // const existingIndex = paths.findIndex((path) => path.name === base.color);
-
-      // if (existingIndex !== -1) {
-      //   const updatedPaths = [...paths];
-      //   updatedPaths[existingIndex].path = chain;
-      //   setPaths(updatedPaths);
-      // } else {
-      //   setPaths([...paths, { name: base.color, path: chain }]);
-      // }
-      // base.isSelected.value = 0;
+      updatePath(chain);
     }
   }, [isDrawing]);
 

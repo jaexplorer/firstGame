@@ -44,6 +44,8 @@ const Background: FC<BackgroundProps> = ({
   const panGesture = Gesture.Pan()
     .onStart(() => {
       drawnPath.value = [];
+      console.log("Starting drawing");
+
       runOnJS(setIsDrawing)(true);
     })
     .onUpdate((e) => {
