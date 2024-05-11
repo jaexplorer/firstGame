@@ -81,14 +81,14 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   }, [grid]);
 
   const points = useDerivedValue(
-    () =>
-      drawnPath.value.map((point) =>
-        vec(
-          point[0] * CELL_SIZE + CELL_SIZE / 2,
-          point[1] * CELL_SIZE + CELL_SIZE / 2
-        )
-      ),
-    // () => drawnPath.value.map((point) => vec(point[0], point[1])),
+    // () =>
+    //   drawnPath.value.map((point) =>
+    //     vec(
+    //       point[0] * CELL_SIZE + CELL_SIZE / 2,
+    //       point[1] * CELL_SIZE + CELL_SIZE / 2
+    //     )
+    //   ),
+    () => drawnPath.value.map((point) => vec(point[0], point[1])),
     [isDrawing]
   );
 

@@ -23,12 +23,7 @@ export const isWalkable = (location: Tile, walls: Wall[]) => {
   return true;
 };
 
-export const convertToCellCoordinates = (
-  x: number,
-  y: number,
-  skip?: boolean
-) => {
-  if (skip) return { cellX: x, cellY: y };
+export const convertToCellCoordinates = (x: number, y: number) => {
   const cellX = Math.floor(x / CELL_SIZE);
   const cellY = Math.floor(y / CELL_SIZE);
   return { cellX, cellY };
@@ -48,6 +43,10 @@ export const floorToInterval = (
   return Math.floor(bigNumber / interval) * interval;
 };
 
+/**
+ * Create a simplified grid based on the level width and height.
+ * Convert from real coordinates to simplified coordinates
+ **/
 export const createGrid = (level: LevelType) => {
   return Array.from({ length: level.height / CELL_SIZE }, (_, y) =>
     Array.from({ length: level.width / CELL_SIZE }, (_, x) => {
@@ -65,6 +64,9 @@ export const createGrid = (level: LevelType) => {
   );
 };
 
+/**
+ * Get the neighbors of a cell (simplifed coordinates)
+ **/
 export const getNeighbors = (cell: Cell, map: Grid): Cell[] => {
   const { cellX, cellY } = cell;
   const neighbors: { x: number; y: number }[] = [];
@@ -93,8 +95,10 @@ export const getNeighbors = (cell: Cell, map: Grid): Cell[] => {
   }));
 };
 
-// starting at the endCell (which will be inside a wall)
-// find the nearest walkable cell towards the startCell
+/**
+ * Starting at the endCell (simplified coordinates - which will be inside a wall).
+ * Find the nearest walkable cell towards the startCell (simplified coordinates)
+ **/
 export const findNearestWalkableCell = (
   startCell: Cell,
   endCell: Cell,
@@ -141,16 +145,18 @@ export const findNearestWalkableCell = (
   return null;
 };
 
+/**
+ * Accepts real coordinates and finds a path with simplifed coordinates via map
+ **/
 export const findPathPoints = (
   startX: number,
   startY: number,
   endX: number,
   endY: number,
-  map: Grid,
-  skip?: boolean
+  map: Grid
 ): number[][] => {
-  const startCell = convertToCellCoordinates(startX, startY, skip);
-  let endCell = convertToCellCoordinates(endX, endY, skip);
+  const startCell = convertToCellCoordinates(startX, startY);
+  let endCell = convertToCellCoordinates(endX, endY);
 
   // If the end cell is not walkable, find the nearest walkable cell
   if (map.isWalkableAt(endCell.cellX, endCell.cellY) === false) {
@@ -194,12 +200,16 @@ export const findPathPoints = (
   return interp.getPoints(80) as number[][];
 };
 
+/**
+ * Accepts real coordinates and splits the path into multiple paths based on walls
+ **/
 export const splitPathByWalls = (path: number[][], map: Grid): number[][][] => {
   const result: number[][][] = [];
   let currentPath: number[][] = [];
 
   for (const point of path) {
-    if (map.isWalkableAt(point[0], point[1])) {
+    const cell = convertToCellCoordinates(point[0], point[1]);
+    if (map.isWalkableAt(cell[0], cell[1])) {
       currentPath.push(point);
     } else {
       if (currentPath.length > 0) {
@@ -217,35 +227,40 @@ export const splitPathByWalls = (path: number[][], map: Grid): number[][][] => {
   return result;
 };
 
+/**
+ * Accepts a list of paths (real coordinates) and connects them into a single path (simplified coordinates)
+ **/
 export const connectPaths = (paths: number[][][], map: Grid): number[][] => {
-  const flattenedArray: number[][] = [];
+  let links: number[][][] = [];
 
-  for (let i = 0; i < paths.length; i++) {
-    for (let j = 0; j < paths[i].length; j++) {
-      flattenedArray.push(paths[i][j]);
+  // Find the links between the paths and add them to a list
+  paths.forEach((path, idx) => {
+    // If the last one in the list, skip
+    if (idx === paths.length - 1) return;
+    const startCell = path[path.length - 1];
+    const endCell = paths[idx + 1][0];
+
+    const link = findPathPoints(
+      startCell[0],
+      startCell[1],
+      endCell[0],
+      endCell[1],
+      map
+    );
+
+    links.push(link);
+  });
+
+  let finalPath: number[][] = [];
+
+  paths.forEach((path, idx) => {
+    // If the last one in the list, theres no links remaining
+    if (idx === paths.length - 1) {
+      finalPath = [...finalPath, ...path];
+    } else {
+      finalPath = [...finalPath, ...path, ...links[idx]];
     }
-  }
+  });
 
-  return flattenedArray;
-  // let connectedPath: number[][] = paths[0];
-
-  // paths.forEach((path, idx) => {
-  //   if (idx === 0) return;
-
-  //   const startCell = connectedPath[connectedPath.length - 1];
-  //   const endCell = path[0];
-
-  //   const connectingPath = findPathPoints(
-  //     startCell[0],
-  //     startCell[1],
-  //     endCell[0],
-  //     endCell[1],
-  //     map,
-  //     true
-  //   );
-
-  //   connectedPath = [...connectedPath, ...connectingPath, ...path];
-  // });
-
-  // return connectedPath;
+  return finalPath;
 };

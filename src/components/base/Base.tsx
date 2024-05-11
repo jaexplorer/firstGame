@@ -126,34 +126,33 @@ const Base: FC<BaseProps> = ({
   }, [lastTap]);
 
   useEffect(() => {
-    if (base.isSelected.value === 1 && isDrawing === false) {
+    if (
+      base.isSelected.value === 1 &&
+      isDrawing === false &&
+      drawnPath.value.length > 0
+    ) {
       console.log("Drawn", drawnPath.value);
       const split = splitPathByWalls(drawnPath.value, map);
       console.log("Split", split);
-      const startCell = convertToCellCoordinates(
-        base.position.value.x,
-        base.position.value.y
-      );
-
       console.log("Chain input", [
-        [[startCell.cellX, startCell.cellY]],
+        [[base.position.value.x, base.position.value.y]],
         ...split,
       ]);
       const chain = connectPaths(
-        [[[startCell.cellX, startCell.cellY]], ...split],
+        [[[base.position.value.x, base.position.value.y]], ...split],
         map
       );
       console.log("chain", chain);
-      const existingIndex = paths.findIndex((path) => path.name === base.color);
+      // const existingIndex = paths.findIndex((path) => path.name === base.color);
 
-      if (existingIndex !== -1) {
-        const updatedPaths = [...paths];
-        updatedPaths[existingIndex].path = chain;
-        setPaths(updatedPaths);
-      } else {
-        setPaths([...paths, { name: base.color, path: chain }]);
-      }
-      base.isSelected.value = 0;
+      // if (existingIndex !== -1) {
+      //   const updatedPaths = [...paths];
+      //   updatedPaths[existingIndex].path = chain;
+      //   setPaths(updatedPaths);
+      // } else {
+      //   setPaths([...paths, { name: base.color, path: chain }]);
+      // }
+      // base.isSelected.value = 0;
     }
   }, [isDrawing]);
 

@@ -48,8 +48,8 @@ const Background: FC<BackgroundProps> = ({
     })
     .onUpdate((e) => {
       if (Date.now() - lastTimestamp.value > interval) {
-        const cell = convertToCellCoordinatesWorklet(e.x, e.y);
-        // const cell = { cellX: e.x, cellY: e.y };
+        // const cell = convertToCellCoordinatesWorklet(e.x, e.y);
+        const cell = { cellX: e.x, cellY: e.y };
 
         const lastCell = drawnPath.value[drawnPath.value.length - 1];
 
