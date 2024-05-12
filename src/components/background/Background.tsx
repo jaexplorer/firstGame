@@ -12,7 +12,7 @@ import Animated, {
   useAnimatedProps,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import { LastTap } from "../../models/Level";
+import { Cell, LastTap } from "../../models/Level";
 import { convertToCellCoordinatesWorklet } from "../../screens/level/LevelUtils";
 import Svg, { Polyline } from "react-native-svg";
 import { CELL_SIZE } from "../../constants/GameConstants";
@@ -37,35 +37,32 @@ const Background: FC<BackgroundProps> = ({
   const styles = useStyles();
   const offset = useSharedValue({ x: 0, y: 0 });
   const start = useSharedValue({ x: 0, y: 0 });
-  const lastTimestamp = useSharedValue(Date.now());
 
-  const interval = 8000; // Interval in milliseconds
-
+  // DISTANCE BASED
   const panGesture = Gesture.Pan()
     .onStart(() => {
       drawnPath.value = [];
       console.log("Starting drawing");
-
       runOnJS(setIsDrawing)(true);
     })
     .onUpdate((e) => {
-      if (Date.now() - lastTimestamp.value > interval) {
-        // const cell = convertToCellCoordinatesWorklet(e.x, e.y);
-        const cell = { cellX: e.x, cellY: e.y };
+      const cell = { cellX: e.x, cellY: e.y };
+      const lastCell = drawnPath.value[drawnPath.value.length - 1];
 
-        const lastCell = drawnPath.value[drawnPath.value.length - 1];
-
-        if (
-          !lastCell ||
-          cell.cellX !== lastCell[0] ||
-          cell.cellY !== lastCell[1]
-        ) {
-          drawnPath.value = [...drawnPath.value, [cell.cellX, cell.cellY]];
-        }
+      if (
+        !lastCell ||
+        Math.sqrt(
+          Math.pow(cell.cellX - lastCell[0], 2) +
+            Math.pow(cell.cellY - lastCell[1], 2)
+        ) > 10 // 10 units distance
+      ) {
+        drawnPath.value = [...drawnPath.value, [cell.cellX, cell.cellY]];
       }
     })
     .onEnd(() => {
       console.log("Path drawn");
+      console.log("drawnPath", drawnPath.value);
+
       runOnJS(setIsDrawing)(false);
     });
 
