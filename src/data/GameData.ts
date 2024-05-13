@@ -1,5 +1,6 @@
 import { screenHeight, screenWidth } from "../constants/ScreenSize";
 import { Level } from "../models/Level";
+import theme from "../theme/Theme";
 
 export const level_0: Level = {
   level: 0,
@@ -34,15 +35,15 @@ export const level_0: Level = {
   players: [
     {
       x: 20,
-      y: 0,
+      y: 20,
       isPlayer: true,
-      color: "green",
+      color: theme.colors.red,
     },
     {
       x: 60,
-      y: 0,
+      y: 20,
       isPlayer: false,
-      color: "red",
+      color: theme.colors.orange,
     },
   ],
 };

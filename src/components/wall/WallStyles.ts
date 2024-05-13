@@ -13,6 +13,7 @@ export const useStyles = () => {
       borderColor: theme.colors.light,
       zIndex: 2,
       borderRadius: theme.units.borderRadius / 1.2,
+      overflow: "hidden",
     },
     background: {
       width: "100%",

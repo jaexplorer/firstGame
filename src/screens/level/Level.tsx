@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useContext, useEffect, useMemo, useState } from "react";
 import { StatusBar as STB, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { connect } from "react-redux";
@@ -24,6 +24,7 @@ import { createGrid, findPathPoints, floorToInterval } from "./LevelUtils";
 import Base from "../../components/base/Base";
 import { Canvas, Points, vec } from "@shopify/react-native-skia";
 import { CurveInterpolator } from "curve-interpolator";
+import { ThemeContext } from "../../theme/Theme";
 
 interface LevelProps {
   levels: LevelType[] | undefined;
@@ -41,9 +42,11 @@ const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
 const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  const { coreColors } = useContext(ThemeContext);
   const heightDifference = insets.bottom + insets.top + 10 + STB.currentHeight!;
   const [lastTap, setLastTap] = useState<LastTap | undefined>(undefined);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [hasSelected, setHasSelected] = useState(false);
   const drawnPath = useSharedValue<number[][]>([]);
 
   const level = useMemo<LevelType | undefined>(() => {
@@ -83,7 +86,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
 
   const points = useDerivedValue(
     () => drawnPath.value.map((point) => vec(point[0], point[1])),
-    [isDrawing]
+    [isDrawing, hasSelected]
   );
 
   return (
@@ -96,6 +99,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
           backgroundWidth={level.width}
           backgroundHeight={level.height}
           drawnPath={drawnPath}
+          hasSelected={hasSelected}
           setIsDrawing={setIsDrawing}
           setLastTap={setLastTap}
         >
@@ -132,7 +136,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
               <Points
                 points={points}
                 mode="polygon"
-                color="lightblue"
+                color="white"
                 style="stroke"
                 strokeWidth={4}
               />
@@ -146,7 +150,7 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                     )
                   )}
                   mode="polygon"
-                  color="red"
+                  color={coreColors[idx]}
                   style="stroke"
                   strokeWidth={4}
                 />
@@ -165,8 +169,9 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 map={map}
                 paths={paths}
                 isDrawing={isDrawing}
-                setPaths={setPaths}
                 drawnPath={drawnPath}
+                setPaths={setPaths}
+                setHasSelected={setHasSelected}
               />
             ))}
           </>

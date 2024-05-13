@@ -22,6 +22,7 @@ interface BackgroundProps {
   backgroundHeight?: number;
   children: ReactNode;
   drawnPath: SharedValue<number[][]>;
+  hasSelected: boolean;
   setIsDrawing: (drawing: boolean) => void;
   setLastTap: (position: LastTap) => void;
 }
@@ -31,6 +32,7 @@ const Background: FC<BackgroundProps> = ({
   backgroundHeight = screenHeight,
   children,
   drawnPath,
+  hasSelected,
   setIsDrawing,
   setLastTap,
 }) => {
@@ -39,10 +41,9 @@ const Background: FC<BackgroundProps> = ({
   const start = useSharedValue({ x: 0, y: 0 });
 
   // DISTANCE BASED
-  const panGesture = Gesture.Pan()
+  const drawPathGesture = Gesture.Pan()
     .onStart(() => {
       drawnPath.value = [];
-      console.log("Starting drawing");
       runOnJS(setIsDrawing)(true);
     })
     .onUpdate((e) => {
@@ -60,34 +61,31 @@ const Background: FC<BackgroundProps> = ({
       }
     })
     .onEnd(() => {
-      console.log("Path drawn");
-      console.log("drawnPath", drawnPath.value);
-
       runOnJS(setIsDrawing)(false);
     });
 
-  // const panGesture = Gesture.Pan()
-  //   .onUpdate((e) => {
-  //     // This confines the camera to the background
-  //     offset.value = {
-  //       x: clamp(
-  //         start.value.x + e.translationX,
-  //         -backgroundWidth + screenWidth,
-  //         0
-  //       ),
-  //       y: clamp(
-  //         start.value.y + e.translationY,
-  //         -backgroundHeight + screenHeight,
-  //         0
-  //       ),
-  //     };
-  //   })
-  //   .onEnd((e) => {
-  //     start.value = {
-  //       x: offset.value.x,
-  //       y: offset.value.y,
-  //     };
-  //   });
+  const panBackgroundGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      // This confines the camera to the background
+      offset.value = {
+        x: clamp(
+          start.value.x + e.translationX,
+          -backgroundWidth + screenWidth,
+          0
+        ),
+        y: clamp(
+          start.value.y + e.translationY,
+          -backgroundHeight + screenHeight,
+          0
+        ),
+      };
+    })
+    .onEnd((e) => {
+      start.value = {
+        x: offset.value.x,
+        y: offset.value.y,
+      };
+    });
 
   const touchGesture = Gesture.Tap().onStart((e) => {
     runOnJS(setLastTap)({
@@ -105,7 +103,10 @@ const Background: FC<BackgroundProps> = ({
     };
   });
 
-  const race = Gesture.Race(touchGesture, panGesture);
+  const race = Gesture.Race(
+    touchGesture,
+    hasSelected ? drawPathGesture : panBackgroundGesture
+  );
 
   return (
     <GestureDetector gesture={race}>

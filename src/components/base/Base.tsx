@@ -7,6 +7,7 @@ import Animated, {
   withSpring,
   withSequence,
   SharedValue,
+  runOnJS,
 } from "react-native-reanimated";
 import {
   GestureHandlerRootView,
@@ -43,6 +44,7 @@ interface BaseProps {
   isDrawing: boolean;
   drawnPath: SharedValue<number[][]>;
   setPaths: (paths: Paths[]) => void;
+  setHasSelected: (selected: boolean) => void;
 }
 
 const Base: FC<BaseProps> = ({
@@ -57,6 +59,7 @@ const Base: FC<BaseProps> = ({
   isDrawing,
   drawnPath,
   setPaths,
+  setHasSelected,
 }) => {
   const styles = useStyles();
   const base = bases[index];
@@ -97,6 +100,7 @@ const Base: FC<BaseProps> = ({
     });
 
   const touchGesture = Gesture.Tap().onStart(() => {
+    runOnJS(setHasSelected)(true);
     bases.forEach((base, i) => {
       base.isSelected.value = i === index ? 1 : 0;
     });
@@ -113,6 +117,9 @@ const Base: FC<BaseProps> = ({
       setPaths([...paths, { name: base.color, path: result }]);
     }
     base.isSelected.value = 0;
+    // TODO: This breaks the path drawing depending on how quick you select another and draw
+    // drawnPath.value = [];
+    setHasSelected(false);
   };
 
   useEffect(() => {
@@ -175,7 +182,7 @@ const Base: FC<BaseProps> = ({
         { translateY: withSpring(base.position.value.y) },
       ],
       backgroundColor: base.color,
-      borderWidth: base.isSelected.value,
+      borderWidth: base.isSelected.value === 1 ? 2 : 0,
     };
   });
 

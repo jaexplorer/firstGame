@@ -12,10 +12,30 @@ export interface WallProps {
 
 const Wall: FC<WallProps> = ({ x = 0, y = 0, width = 50, height = 50 }) => {
   const styles = useStyles();
+  const diagonalLength = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+  const numberOfStrips = Math.ceil((width + height) / 10);
 
   return (
     <View style={[styles.wall, { left: x, top: y, width, height }]}>
-      <Image source={WallBackground} style={styles.background} />
+      <View
+        style={{
+          position: "absolute",
+          left: -diagonalLength / 2,
+          top: -diagonalLength / 2,
+          transform: [{ rotate: "45deg" }],
+        }}
+      >
+        {Array.from({ length: numberOfStrips }).map((_, i) => (
+          <View
+            key={i}
+            style={{
+              width: diagonalLength * 2,
+              height: 10,
+              backgroundColor: i % 2 === 0 ? "black" : "#131313",
+            }}
+          />
+        ))}
+      </View>
     </View>
   );
 };
