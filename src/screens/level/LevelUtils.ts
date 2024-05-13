@@ -145,10 +145,15 @@ export const findNearestWalkableCell = (
   return null;
 };
 
-export const smoothenPath = (path: number[][], map: Grid): number[][] => {
+export const smoothenPath = (
+  path: number[][],
+  map: Grid,
+  tension?: number,
+  alpha?: number
+): number[][] => {
   const interp = new CurveInterpolator(path, {
-    tension: 0.5,
-    alpha: 0.5,
+    tension: tension || 0.5,
+    alpha: alpha || 0.5,
   });
 
   return interp.getPoints(80) as number[][];
@@ -255,7 +260,8 @@ export const connectPaths = (paths: number[][][], map: Grid): number[][] => {
       startCell[1],
       endCell[0],
       endCell[1],
-      map
+      map,
+      true
     );
 
     // Remove the start and end points
@@ -278,5 +284,5 @@ export const connectPaths = (paths: number[][][], map: Grid): number[][] => {
     }
   });
 
-  return smoothenPath(finalPath, map);
+  return smoothenPath(finalPath, map, 0);
 };
