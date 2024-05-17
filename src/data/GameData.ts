@@ -46,4 +46,12 @@ export const level_0: Level = {
       color: theme.colors.orange,
     },
   ],
+  armies: [
+    {
+      x: 40,
+      y: 140,
+      isPlayer: true,
+      color: theme.colors.red,
+    },
+  ],
 };

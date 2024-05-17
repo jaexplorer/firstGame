@@ -1,3 +1,4 @@
+import { Army } from "./Army";
 import { Base } from "./Base";
 import { Wall } from "./Wall";
 
@@ -7,6 +8,7 @@ export interface Level {
   height: number;
   walls: Wall[];
   players: Base[];
+  armies: Army[];
 }
 
 export interface LastTap {

@@ -25,6 +25,8 @@ import Base from "../../components/base/Base";
 import { Canvas, Points, vec } from "@shopify/react-native-skia";
 import { CurveInterpolator } from "curve-interpolator";
 import { ThemeContext } from "../../theme/Theme";
+import { PixelsShared } from "../../models/Army";
+import Army from "../../components/army/Army";
 
 interface LevelProps {
   levels: LevelType[] | undefined;
@@ -71,6 +73,17 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
     isSelected: useSharedValue(0),
   }));
 
+  const armies = level.armies.map((army) => ({
+    offset: useSharedValue({ x: 0, y: 0 }),
+    position: useSharedValue({ x: army.x, y: army.y }),
+    isPlayer: army.isPlayer,
+    color: army.color,
+    isSelected: useSharedValue(0),
+    pixels: [],
+    border: useSharedValue<number[][]>([]),
+  }));
+
+  // TODO work with armies
   const [paths, setPaths] = useState<Paths[]>(
     level.players.map((player) => ({ name: player.color, path: [] }))
   );
@@ -162,6 +175,23 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
                 key={idx}
                 index={idx}
                 bases={bases}
+                backgroundWidth={level.width}
+                backgroundHeight={level.height}
+                walls={level.walls}
+                lastTap={lastTap}
+                map={map}
+                paths={paths}
+                isDrawing={isDrawing}
+                drawnPath={drawnPath}
+                setPaths={setPaths}
+                setHasSelected={setHasSelected}
+              />
+            ))}
+            {armies.map((_, idx) => (
+              <Army
+                key={idx}
+                index={idx}
+                armies={armies}
                 backgroundWidth={level.width}
                 backgroundHeight={level.height}
                 walls={level.walls}

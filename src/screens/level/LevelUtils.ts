@@ -207,6 +207,7 @@ export const findPathPoints = (
   const smoothPath = smoothenPath(newPath, map);
 
   // To adjust the start point of the path not being at the center of the base
+  // TODO Work with armies
   smoothPath[0] = [
     (startX + BASE_SIZE / 2 - CELL_SIZE / 2) / CELL_SIZE,
     (startY + BASE_SIZE / 2 - CELL_SIZE / 2) / CELL_SIZE,

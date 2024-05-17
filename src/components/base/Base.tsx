@@ -62,6 +62,7 @@ const Base: FC<BaseProps> = ({
   setHasSelected,
 }) => {
   const styles = useStyles();
+  // TODO paths, need to work with armies
   const base = bases[index];
   const path = paths[index];
 
@@ -101,6 +102,7 @@ const Base: FC<BaseProps> = ({
 
   const touchGesture = Gesture.Tap().onStart(() => {
     runOnJS(setHasSelected)(true);
+    // TODO Update this logic to work with armies
     bases.forEach((base, i) => {
       base.isSelected.value = i === index ? 1 : 0;
     });
