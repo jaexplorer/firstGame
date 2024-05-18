@@ -18,20 +18,20 @@ import { PixelsShared } from "../../models/Army";
 import { randomInterval } from "./PixelUtils";
 
 interface PixelProps {
-  pixel: PixelsShared;
+  pixel: { x: number; y: number };
   color: string;
 }
 
 const Pixel: FC<PixelProps> = ({ pixel, color }) => {
   const styles = useStyles();
 
-  const jiggleX = useSharedValue(pixel.position.value.x);
-  const jiggleY = useSharedValue(pixel.position.value.y);
+  const jiggleX = useSharedValue(pixel.x);
+  const jiggleY = useSharedValue(pixel.y);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      jiggleX.value = withTiming(pixel.position.value.x + Math.random() * 2);
-      jiggleY.value = withTiming(pixel.position.value.y + Math.random() * 2);
+      jiggleX.value = withTiming(pixel.x + Math.random() * 2);
+      jiggleY.value = withTiming(pixel.y + Math.random() * 2);
     }, randomInterval(100, 400));
 
     return () => clearInterval(intervalId);
@@ -41,6 +41,7 @@ const Pixel: FC<PixelProps> = ({ pixel, color }) => {
     return {
       transform: [{ translateX: jiggleX.value }, { translateY: jiggleY.value }],
       backgroundColor: color,
+      shadowColor: color,
     };
   });
 

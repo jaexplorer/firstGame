@@ -39,8 +39,6 @@ export interface Tile {
   isWall?: boolean;
 }
 
-const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
-
 const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
   const styles = useStyles();
   const insets = useSafeAreaInsets();

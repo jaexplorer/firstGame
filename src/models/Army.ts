@@ -19,7 +19,7 @@ export interface ArmyShared {
   isPlayer?: boolean;
   color: string;
   isSelected: SharedValue<number>;
-  pixels: PixelsShared[];
+  pixels: { x: number; y: number }[];
   border: SharedValue<number[][]>;
 }
 

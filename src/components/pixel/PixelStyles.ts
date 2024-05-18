@@ -12,6 +12,11 @@ export const useStyles = () => {
       backgroundColor: "green",
       width: 4,
       height: 4,
+      shadowColor: "red", // Change to desired glow color
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 1,
+      shadowRadius: 10, // Adjust to make the glow more or less intense
+      elevation: 10, // For Android
     },
   });
 };

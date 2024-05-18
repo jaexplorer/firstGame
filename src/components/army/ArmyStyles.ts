@@ -9,11 +9,14 @@ export const useStyles = () => {
   return StyleSheet.create({
     container: {
       position: "absolute",
-      width: BASE_SIZE,
-      height: BASE_SIZE,
-      borderRadius: theme.units.borderRadius / 3,
-      borderColor: theme.colors.light,
-      borderWidth: 0,
+      width: "100%",
+      height: "100%",
+      // width: BASE_SIZE,
+      // height: BASE_SIZE,
+      // borderRadius: theme.units.borderRadius / 3,
+      // borderColor: theme.colors.light,
+      // borderWidth: 0,
+      // overflow: "visible",
     },
   });
 };
