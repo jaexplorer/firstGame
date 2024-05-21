@@ -38,40 +38,42 @@ interface Point {
   y: number;
 }
 
-export const leftmostPoint = (points: Point[]): Point => {
-  return points.reduce((leftmost, point) =>
-    point.x < leftmost.x || (point.x === leftmost.x && point.y < leftmost.y)
-      ? point
-      : leftmost
-  );
+// Function to calculate the angle of a point relative to the origin
+const calculateAngle = (origin: Point, point: Point): number => {
+  return Math.atan2(point.y - origin.y, point.x - origin.x) * (180 / Math.PI);
 };
 
-export const orientation = (p: Point, q: Point, r: Point): number => {
-  return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+// Function to calculate the distance from the origin to a point
+const calculateDistance = (origin: Point, point: Point): number => {
+  return Math.sqrt((point.x - origin.x) ** 2 + (point.y - origin.y) ** 2);
 };
 
-export const giftWrapping = (points: Point[]): Point[] => {
+// Function to divide the points into sections and find the furthest point in each section
+export const concaveHull = (
+  points: Point[],
+  sections: number = 12
+): Point[] => {
   if (points.length < 3) return points;
 
-  const hull: Point[] = [];
-  let pointOnHull = leftmostPoint(points);
+  const origin: Point = { x: 0, y: 0 }; // Assuming the origin is (0, 0)
+  const sectionAngle = 360 / sections;
+  const hull: Point[] = new Array(sections).fill(null);
 
-  do {
-    hull.push(pointOnHull);
-    let endPoint = points[0];
+  points.forEach((point) => {
+    const angle = (calculateAngle(origin, point) + 360) % 360; // Normalize angle to [0, 360)
+    const sectionIndex = Math.floor(angle / sectionAngle);
+    const distance = calculateDistance(origin, point);
 
-    for (let j = 1; j < points.length; j++) {
-      if (
-        endPoint === pointOnHull ||
-        orientation(pointOnHull, endPoint, points[j]) > 0
-      ) {
-        endPoint = points[j];
-      }
+    if (
+      !hull[sectionIndex] ||
+      distance > calculateDistance(origin, hull[sectionIndex])
+    ) {
+      hull[sectionIndex] = point;
     }
-    pointOnHull = endPoint;
-  } while (pointOnHull !== hull[0]);
+  });
 
-  return hull.concat(hull[0]);
+  // Remove any nulls in case some sections didn't have any points
+  return hull.filter((point) => point !== null);
 };
 
 export const computeCentroid = (points: Point[]): Point => {

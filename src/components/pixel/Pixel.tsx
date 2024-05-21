@@ -28,14 +28,14 @@ const Pixel: FC<PixelProps> = ({ pixel, color }) => {
   const jiggleX = useSharedValue(pixel.x);
   const jiggleY = useSharedValue(pixel.y);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      jiggleX.value = withTiming(pixel.x + Math.random() * 2);
-      jiggleY.value = withTiming(pixel.y + Math.random() * 2);
-    }, randomInterval(100, 400));
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     jiggleX.value = withTiming(pixel.x + Math.random() * 2);
+  //     jiggleY.value = withTiming(pixel.y + Math.random() * 2);
+  //   }, randomInterval(100, 400));
 
-    return () => clearInterval(intervalId);
-  }, []);
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

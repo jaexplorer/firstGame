@@ -15,7 +15,7 @@ import { screenWidth, screenHeight } from "../../constants/ScreenSize";
 import {
   addAlpha,
   expandHull,
-  giftWrapping,
+  concaveHull,
   initializePixelPositions,
 } from "./ArmyUtils";
 import Pixel from "../pixel/Pixel";
@@ -54,13 +54,24 @@ const Army: FC<ArmyProps> = ({
   const styles = useStyles();
   const army = armies[index];
   const pixels = initializePixelPositions(30);
-  const hull = giftWrapping(pixels);
-  const expandedBorder = expandHull(hull, 12);
-  // TODO Do Concave Hull + limit to 6-12 points
+
+  const hull = useMemo(() => {
+    return concaveHull(pixels, 12);
+  }, [pixels]);
+
+  const expandedBorder = useMemo(() => {
+    return expandHull(hull, 12);
+  }, [hull]);
+
   // TODO border animation
 
-  const minX = Math.min(...expandedBorder.map((point) => point.x));
-  const minY = Math.min(...expandedBorder.map((point) => point.y));
+  const minX = useMemo<number>(() => {
+    return Math.min(...expandedBorder.map((point) => point.x));
+  }, [expandedBorder]);
+
+  const minY = useMemo<number>(() => {
+    return Math.min(...expandedBorder.map((point) => point.y));
+  }, [expandedBorder]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -103,9 +114,9 @@ const Army: FC<ArmyProps> = ({
         {pixels.map((pixel, idx) => (
           <Pixel key={idx} pixel={pixel} color={army.color} />
         ))}
-        {/* {hull.map((pixel, idx) => (
-            <Pixel key={idx} pixel={pixel} color="#FFF" />
-          ))} */}
+        {hull.map((pixel, idx) => (
+          <Pixel key={idx} pixel={pixel} color="#FFF" />
+        ))}
       </Animated.View>
     </GestureDetector>
   );
