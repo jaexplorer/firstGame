@@ -21,6 +21,7 @@ import {
 import Pixel from "../pixel/Pixel";
 import { Canvas, Fill, Points, vec } from "@shopify/react-native-skia";
 import Svg, { Polygon } from "react-native-svg";
+import { MinMax } from "./ArmyConstants";
 
 interface ArmyProps {
   backgroundWidth?: number;
@@ -55,29 +56,43 @@ const Army: FC<ArmyProps> = ({
   const army = armies[index];
   const pixels = initializePixelPositions(30);
 
-  const hull = useMemo(() => {
-    return concaveHull(pixels, 12);
-  }, [pixels]);
+  // const hull = useMemo(() => {
+  //   return concaveHull(pixels, 12);
+  // }, [pixels]);
 
-  const expandedBorder = useMemo(() => {
-    return expandHull(hull, 12);
-  }, [hull]);
+  // const expandedBorder = useMemo(() => {
+  //   return expandHull(hull, 12);
+  // }, [hull]);
 
   // TODO border animation
+  // TODO change when pixels are created, not every rerender
 
-  const minX = useMemo<number>(() => {
-    return Math.min(...expandedBorder.map((point) => point.x));
-  }, [expandedBorder]);
-
-  const minY = useMemo<number>(() => {
-    return Math.min(...expandedBorder.map((point) => point.y));
-  }, [expandedBorder]);
+  // const minMax = useMemo<MinMax>(() => {
+  //   return {
+  //     minX: Math.min(...expandedBorder.map((point) => point.x)),
+  //     minY: Math.min(...expandedBorder.map((point) => point.y)),
+  //     maxX: Math.max(...expandedBorder.map((point) => point.x)),
+  //     maxY: Math.max(...expandedBorder.map((point) => point.y)),
+  //   };
+  // }, [expandedBorder]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
+      // transform: [
+      //   {
+      //     translateX: withSpring(army.position.value.x - Math.abs(minMax.minX)),
+      //   },
+      //   {
+      //     translateY: withSpring(army.position.value.y - Math.abs(minMax.minY)),
+      //   },
+      // ],
       transform: [
-        { translateX: withSpring(army.position.value.x) },
-        { translateY: withSpring(army.position.value.y) },
+        {
+          translateX: withSpring(army.position.value.x),
+        },
+        {
+          translateY: withSpring(army.position.value.y),
+        },
       ],
     };
   });
@@ -87,15 +102,11 @@ const Army: FC<ArmyProps> = ({
   return (
     <GestureDetector gesture={race}>
       <Animated.View style={[styles.container, animatedStyles]}>
-        <Svg
+        {/* <Svg
           style={[
             {
-              width: "100%",
-              height: "100%",
-              transform: [
-                { translateX: -Math.abs(minX) },
-                { translateY: -Math.abs(minY) },
-              ],
+              width: minMax.maxX - minMax.minX,
+              height: minMax.maxY - minMax.minY,
             },
           ]}
         >
@@ -103,20 +114,32 @@ const Army: FC<ArmyProps> = ({
             points={expandedBorder
               .map(
                 (point) =>
-                  `${point.x + Math.abs(minX)},${point.y + Math.abs(minY)}`
+                  `${point.x + Math.abs(minMax.minX)},${
+                    point.y + Math.abs(minMax.minY)
+                  }`
               )
               .join(" ")}
             fill={addAlpha(army.color, 0.4)}
             stroke={army.color}
             strokeWidth="3"
           />
-        </Svg>
+        </Svg> */}
+        {/* <View
+          style={{
+            position: "absolute",
+            transform: [
+              { translateX: +Math.abs(minMax.minX) },
+              { translateY: +Math.abs(minMax.minY) },
+            ],
+          }}
+        > */}
         {pixels.map((pixel, idx) => (
           <Pixel key={idx} pixel={pixel} color={army.color} />
         ))}
-        {hull.map((pixel, idx) => (
-          <Pixel key={idx} pixel={pixel} color="#FFF" />
-        ))}
+        {/* {hull.map((pixel, idx) => (
+            <Pixel key={idx} pixel={pixel} color="#FFF" />
+          ))} */}
+        {/* </View> */}
       </Animated.View>
     </GestureDetector>
   );

@@ -13,7 +13,7 @@ export const addAlpha = (rgb: string, alpha: number): string => {
 
 export const initializePixelPositions = (
   pixelCount: number
-): { x: number; y: number }[] => {
+): PixelsShared[] => {
   const angleBetweenPixels = 360 / pixelCount;
 
   const pixels = [...Array(pixelCount)].map((_, i) => {
@@ -23,11 +23,10 @@ export const initializePixelPositions = (
       Math.random() * (ARMY_MAX_SPREAD - ARMY_MIN_SPREAD) + ARMY_MIN_SPREAD;
     const x = spread * Math.cos(angleInRadians);
     const y = spread * Math.sin(angleInRadians);
-    return { x: Number(x.toFixed()), y: Number(y.toFixed(2)) };
-    // return {
-    //   offset: useSharedValue({ x: x + BASE_SIZE / 2, y: y + BASE_SIZE / 2 }),
-    //   position: useSharedValue({ x: x + BASE_SIZE / 2, y: y + BASE_SIZE / 2 }),
-    // };
+    return {
+      offset: useSharedValue({ x: x + BASE_SIZE / 2, y: y + BASE_SIZE / 2 }),
+      position: useSharedValue({ x: x + BASE_SIZE / 2, y: y + BASE_SIZE / 2 }),
+    };
   });
 
   return pixels;

@@ -9,8 +9,8 @@ export const useStyles = () => {
   return StyleSheet.create({
     container: {
       position: "absolute",
-      width: "100%",
-      height: "100%",
+      // width: "100%",
+      // height: "100%",
       // width: BASE_SIZE,
       // height: BASE_SIZE,
       // borderRadius: theme.units.borderRadius / 3,

@@ -48,8 +48,8 @@ export const floorToInterval = (
  * Convert from real coordinates to simplified coordinates
  **/
 export const createGrid = (level: LevelType) => {
-  return Array.from({ length: level.height / CELL_SIZE }, (_, y) =>
-    Array.from({ length: level.width / CELL_SIZE }, (_, x) => {
+  return Array.from({ length: level.width / CELL_SIZE }, (_, y) =>
+    Array.from({ length: level.height / CELL_SIZE }, (_, x) => {
       const WALL_BUFFER = CELL_SIZE;
       const isWall = level.walls.some(
         (wall) =>

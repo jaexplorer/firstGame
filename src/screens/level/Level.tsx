@@ -116,15 +116,17 @@ const Level: FC<LevelProps> = ({ levels, selectedLevel }) => {
         >
           <>
             {!!grid &&
-              grid.map((row, rIdx) =>
-                row.map((col, cIdx) => (
+              grid.map((col, colIdx) =>
+                col.map((row, rowIdx) => (
                   <View
-                    key={`${rIdx}-${cIdx}`}
+                    key={`${colIdx}-${rowIdx}`}
                     style={[
                       styles.cell,
+                      colIdx === 0 &&
+                        rowIdx === col.length - 1 && { backgroundColor: "red" },
                       {
-                        left: rIdx * CELL_SIZE,
-                        top: cIdx * CELL_SIZE,
+                        left: colIdx * CELL_SIZE,
+                        top: rowIdx * CELL_SIZE,
                         width: CELL_SIZE,
                         height: CELL_SIZE,
                       },
