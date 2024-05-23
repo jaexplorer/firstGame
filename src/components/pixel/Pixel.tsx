@@ -5,9 +5,11 @@ import { Grid } from "pathfinding";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   SharedValue,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -24,18 +26,24 @@ interface PixelProps {
 
 const Pixel: FC<PixelProps> = ({ pixel, color }) => {
   const styles = useStyles();
+  // const jiggle = useSharedValue(pixel.position.value);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      pixel.position.value.x = withTiming(
-        pixel.position.value.x + Math.random() * 2
-      );
-      pixel.position.value.y = withTiming(
-        pixel.position.value.y + Math.random() * 2
-      );
-    }, randomInterval(100, 400));
-
-    return () => clearInterval(intervalId);
+    pixel.position.value = withRepeat(
+      withSequence(
+        ...[...Array(randomInterval(4, 12))].map(() =>
+          withTiming(
+            {
+              x: pixel.position.value.x + Math.random() * 2,
+              y: pixel.position.value.y + Math.random() * 2,
+            },
+            { duration: randomInterval(100, 400) }
+          )
+        )
+      ),
+      -1,
+      true
+    );
   }, []);
 
   const animatedStyles = useAnimatedStyle(() => {
