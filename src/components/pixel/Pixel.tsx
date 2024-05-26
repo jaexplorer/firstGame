@@ -26,7 +26,6 @@ interface PixelProps {
 
 const Pixel: FC<PixelProps> = ({ pixel, color }) => {
   const styles = useStyles();
-  // const jiggle = useSharedValue(pixel.position.value);
 
   useEffect(() => {
     pixel.position.value = withRepeat(

@@ -32,40 +32,37 @@ export const initializePixelPositions = (
   return pixels;
 };
 
-interface Point {
-  x: number;
-  y: number;
-}
-
 // Function to calculate the angle of a point relative to the origin
-const calculateAngle = (origin: Point, point: Point): number => {
-  return Math.atan2(point.y - origin.y, point.x - origin.x) * (180 / Math.PI);
+const calculateAngle = (point: PixelsShared): number => {
+  return (
+    Math.atan2(point.position.value.y, point.position.value.x) * (180 / Math.PI)
+  );
 };
 
 // Function to calculate the distance from the origin to a point
-const calculateDistance = (origin: Point, point: Point): number => {
-  return Math.sqrt((point.x - origin.x) ** 2 + (point.y - origin.y) ** 2);
+const calculateDistance = (point: PixelsShared): number => {
+  return Math.sqrt(point.position.value.x ** 2 + point.position.value.y ** 2);
 };
 
 // Function to divide the points into sections and find the furthest point in each section
 export const concaveHull = (
-  points: Point[],
+  points: PixelsShared[],
   sections: number = 12
-): Point[] => {
+): PixelsShared[] => {
+  "worklet";
   if (points.length < 3) return points;
 
-  const origin: Point = { x: 0, y: 0 }; // Assuming the origin is (0, 0)
   const sectionAngle = 360 / sections;
-  const hull: Point[] = new Array(sections).fill(null);
+  const hull: PixelsShared[] = new Array(sections).fill(null);
 
   points.forEach((point) => {
-    const angle = (calculateAngle(origin, point) + 360) % 360; // Normalize angle to [0, 360)
+    const angle = (calculateAngle(point) + 360) % 360; // Normalize angle to [0, 360)
     const sectionIndex = Math.floor(angle / sectionAngle);
-    const distance = calculateDistance(origin, point);
+    const distance = calculateDistance(point);
 
     if (
       !hull[sectionIndex] ||
-      distance > calculateDistance(origin, hull[sectionIndex])
+      distance > calculateDistance(hull[sectionIndex])
     ) {
       hull[sectionIndex] = point;
     }
@@ -75,11 +72,13 @@ export const concaveHull = (
   return hull.filter((point) => point !== null);
 };
 
-export const computeCentroid = (points: Point[]): Point => {
+export const computeCentroid = (
+  points: PixelsShared[]
+): { x: number; y: number } => {
   const centroid = points.reduce(
     (acc, point) => {
-      acc.x += point.x;
-      acc.y += point.y;
+      acc.x += point.position.value.x;
+      acc.y += point.position.value.y;
       return acc;
     },
     { x: 0, y: 0 }
@@ -91,18 +90,27 @@ export const computeCentroid = (points: Point[]): Point => {
   return centroid;
 };
 
-export const expandHull = (hull: Point[], gap: number): Point[] => {
+export const expandHull = (
+  hull: PixelsShared[],
+  gap: number
+): PixelsShared[] => {
   const centroid = computeCentroid(hull);
 
   return hull.map((point) => {
-    const dx = point.x - centroid.x;
-    const dy = point.y - centroid.y;
+    const dx = point.position.value.x - centroid.x;
+    const dy = point.position.value.y - centroid.y;
     const length = Math.sqrt(dx * dx + dy * dy);
     const scale = (length + gap) / length;
 
     return {
-      x: centroid.x + dx * scale,
-      y: centroid.y + dy * scale,
+      offset: useSharedValue({
+        x: centroid.x + dx * scale,
+        y: centroid.y + dy * scale,
+      }),
+      position: useSharedValue({
+        x: centroid.x + dx * scale,
+        y: centroid.y + dy * scale,
+      }),
     };
   });
 };
