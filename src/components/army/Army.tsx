@@ -10,6 +10,7 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
+  useSharedValue,
   withSpring,
 } from "react-native-reanimated";
 import { LastTap, Paths } from "../../models/Level";
@@ -25,6 +26,7 @@ import Pixel from "../pixel/Pixel";
 import { Canvas, Fill, Points, vec } from "@shopify/react-native-skia";
 import Svg, { Polygon } from "react-native-svg";
 import { MinMax } from "./ArmyConstants";
+import Border from "../border/Border";
 
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 
@@ -59,49 +61,37 @@ const Army: FC<ArmyProps> = ({
 }) => {
   const styles = useStyles();
   const army = armies[index];
-  const pixels = initializePixelPositions(30);
 
-  const hull = concaveHull(pixels, 12);
+  const pixels = useSharedValue(initializePixelPositions(30));
 
-  const expandedBorder = expandHull(hull, 12);
+  const hull = useDerivedValue(() => {
+    return concaveHull(pixels.value, 12);
+  });
+
+  const expandedBorder = useDerivedValue(() => {
+    return expandHull(hull.value, 12);
+  });
 
   // TODO border animation
   // TODO change when pixels are created, not every rerender
 
-  const minMax = useMemo<MinMax>(() => {
-    return {
-      minX: Math.min(...expandedBorder.map((point) => point.position.value.x)),
-      minY: Math.min(...expandedBorder.map((point) => point.position.value.y)),
-      maxX: Math.max(...expandedBorder.map((point) => point.position.value.x)),
-      maxY: Math.max(...expandedBorder.map((point) => point.position.value.y)),
-    };
-  }, [expandedBorder]);
-
-  const animatedPoints = useDerivedValue(() => {
-    return expandedBorder
-      .map(
-        (pixel) =>
-          `${pixel.position.value.x + Math.abs(minMax.minX)},${
-            pixel.position.value.y + Math.abs(minMax.minY)
-          }`
-      )
-      .join(" ");
-  });
-
-  const animatedProps = useAnimatedProps(() => {
-    return {
-      points: animatedPoints.value,
-    };
-  });
+  // const minMax = useMemo<MinMax>(() => {
+  //   return {
+  //     minX: Math.min(...expandedBorder.map((point) => point.position.value.x)),
+  //     minY: Math.min(...expandedBorder.map((point) => point.position.value.y)),
+  //     maxX: Math.max(...expandedBorder.map((point) => point.position.value.x)),
+  //     maxY: Math.max(...expandedBorder.map((point) => point.position.value.y)),
+  //   };
+  // }, [expandedBorder]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          translateX: withSpring(army.position.value.x - Math.abs(minMax.minX)),
+          translateX: withSpring(army.position.value.x),
         },
         {
-          translateY: withSpring(army.position.value.y - Math.abs(minMax.minY)),
+          translateY: withSpring(army.position.value.y),
         },
       ],
     };
@@ -112,31 +102,19 @@ const Army: FC<ArmyProps> = ({
   return (
     <GestureDetector gesture={race}>
       <Animated.View style={[styles.container, animatedStyles]}>
-        <Svg
-          style={[
-            {
-              width: minMax.maxX - minMax.minX,
-              height: minMax.maxY - minMax.minY,
-            },
-          ]}
-        >
-          <AnimatedPolygon
-            animatedProps={animatedProps}
-            fill={addAlpha(army.color, 0.4)}
-            stroke={army.color}
-            strokeWidth="3"
-          />
-        </Svg>
+        {expandedBorder.value.map((pixel, idx) => (
+          <Border key={idx} point={pixel} color={army.color} />
+        ))}
         <View
           style={{
             position: "absolute",
-            transform: [
-              { translateX: +Math.abs(minMax.minX) },
-              { translateY: +Math.abs(minMax.minY) },
-            ],
+            // transform: [
+            //   { translateX: +Math.abs(minMax.minX) },
+            //   { translateY: +Math.abs(minMax.minY) },
+            // ],
           }}
         >
-          {pixels.map((pixel, idx) => (
+          {pixels.value.map((pixel, idx) => (
             <Pixel key={idx} pixel={pixel} color={army.color} />
           ))}
         </View>

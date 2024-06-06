@@ -1,0 +1,19 @@
+diff --git a/node_modules/react-native-anchor-point/index.ts b/node_modules/react-native-anchor-point/index.ts
+index f789fa7..8c006cb 100644
+--- a/node_modules/react-native-anchor-point/index.ts
++++ b/node_modules/react-native-anchor-point/index.ts
+@@ -1,4 +1,4 @@
+-import type { TransformsStyle } from "react-native";
++import type { TransformsStyle, Animated } from "react-native";
+ 
+ export interface Point {
+     x: number;
+@@ -16,7 +16,7 @@ const isValidSize = (size: Size): boolean => {
+ 
+ const defaultAnchorPoint = { x: 0.5, y: 0.5 };
+ 
+-export const withAnchorPoint = (transform: TransformsStyle, anchorPoint: Point, size: Size) => {
++export const withAnchorPoint = (transform: TransformsStyle | Animated.WithAnimatedValue<TransformsStyle>, anchorPoint: Point, size: Size) => {
+     if(!isValidSize(size)) {
+         return transform;
+     }
