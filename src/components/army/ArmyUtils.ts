@@ -1,10 +1,10 @@
-import { useSharedValue } from "react-native-reanimated";
+import { useSharedValue, makeMutable } from "react-native-reanimated";
 import {
   ARMY_MAX_SPREAD,
   ARMY_MIN_SPREAD,
   BASE_SIZE,
 } from "../../constants/GameConstants";
-import { PixelsShared } from "../../models/Army";
+import { Pixels, PixelsShared } from "../../models/Army";
 
 export const addAlpha = (rgb: string, alpha: number): string => {
   let [r, g, b] = rgb.match(/\d+/g)!.map(Number);
@@ -34,6 +34,7 @@ export const initializePixelPositions = (
 
 // Function to calculate the angle of a point relative to the origin
 const calculateAngle = (point: PixelsShared): number => {
+  "worklet";
   return (
     Math.atan2(point.position.value.y, point.position.value.x) * (180 / Math.PI)
   );
@@ -41,6 +42,7 @@ const calculateAngle = (point: PixelsShared): number => {
 
 // Function to calculate the distance from the origin to a point
 const calculateDistance = (point: PixelsShared): number => {
+  "worklet";
   return Math.sqrt(point.position.value.x ** 2 + point.position.value.y ** 2);
 };
 
@@ -75,6 +77,8 @@ export const concaveHull = (
 export const computeCentroid = (
   points: PixelsShared[]
 ): { x: number; y: number } => {
+  "worklet";
+
   const centroid = points.reduce(
     (acc, point) => {
       acc.x += point.position.value.x;
@@ -94,6 +98,8 @@ export const expandHull = (
   hull: PixelsShared[],
   gap: number
 ): PixelsShared[] => {
+  "worklet";
+
   const centroid = computeCentroid(hull);
 
   return hull.map((point) => {
@@ -102,15 +108,14 @@ export const expandHull = (
     const length = Math.sqrt(dx * dx + dy * dy);
     const scale = (length + gap) / length;
 
-    return {
-      offset: useSharedValue({
-        x: centroid.x + dx * scale,
-        y: centroid.y + dy * scale,
-      }),
-      position: useSharedValue({
-        x: centroid.x + dx * scale,
-        y: centroid.y + dy * scale,
-      }),
+    point.offset.value = {
+      x: centroid.x + dx * scale,
+      y: centroid.y + dy * scale,
     };
+    point.position.value = {
+      x: centroid.x + dx * scale,
+      y: centroid.y + dy * scale,
+    };
+    return point;
   });
 };

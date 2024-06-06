@@ -33,3 +33,14 @@ export interface PixelsShared {
     y: number;
   }>;
 }
+
+export interface Pixels {
+  offset: {
+    x: number;
+    y: number;
+  };
+  position: {
+    x: number;
+    y: number;
+  };
+}

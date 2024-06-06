@@ -16,15 +16,19 @@ import Animated, {
 import { LastTap, Paths } from "../../models/Level";
 import { useStyles } from "./BorderStyles";
 import { PixelsShared } from "../../models/Army";
-import { withAnchorPoint } from "react-native-anchor-point";
 
 interface BorderProps {
   point: PixelsShared;
+  centroid: { x: number; y: number };
   color: string;
 }
 
-const Border: FC<BorderProps> = ({ point, color }) => {
+const Border: FC<BorderProps> = ({ point, centroid, color }) => {
   const styles = useStyles();
+  const dx = point.position.value.x - centroid.x;
+  const dy = point.position.value.y - centroid.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const scale = (length + 12) / length;
 
   // const calculateDistance = (point1: PixelsShared, point2: PixelsShared) => {
   //   return Math.hypot(point2.x - point1.x, point2.y - point1.y);
@@ -37,8 +41,14 @@ const Border: FC<BorderProps> = ({ point, color }) => {
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: point.position.value.x },
-        { translateY: point.position.value.y },
+        {
+          translateX:
+            centroid.x + (point.position.value.x - centroid.x) * scale,
+        },
+        {
+          translateY:
+            centroid.y + (point.position.value.y - centroid.y) * scale,
+        },
       ],
     };
   });
